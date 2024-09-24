@@ -1,0 +1,50 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta Tags and Bootstrap CSS -->
+</head>
+<body>
+    <!-- Navbar -->
+    <!-- Cover Image Section -->
+    <!-- About Us Section -->
+    <!-- Tours Section -->
+    <section id="tours" class="container">
+        <h2 class="my-4">Available Tours</h2>
+        <div class="row">
+            {% for tour in tours %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if tour.image_url %}
+                    <img src="{{ tour.image_url }}" class="card-img-top" alt="{{ tour.name }}">
+                    {% else %}
+                    <img src="/static/images/placeholder.jpg" class="card-img-top" alt="No Image Available">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ tour.name }}</h5>
+                        <p class="card-text">{{ tour.description[:100] }}...</p>
+                        {% if user %}
+                            {% if user.role.value == 'A' %}
+                            <p class="card-text"><strong>Price:</strong> {{ tour.price_A }} THB</p>
+                            {% elif user.role.value == 'B' %}
+                            <p class="card-text"><strong>Price:</strong> {{ tour.price_B }} THB</p>
+                            {% else %}
+                            <p class="card-text"><strong>Price:</strong> {{ tour.price_C }} THB</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="card-text"><strong>Price:</strong> {{ tour.price_C }} THB</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer">
+                        <a href="/tours/{{ tour.id }}" class="btn btn-primary">View More</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    <!-- Transports Section (Similar to Tours Section) -->
+    <!-- Modals for Login and Signup -->
+    <!-- Scripts -->
+</body>
+</html>
