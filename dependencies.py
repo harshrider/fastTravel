@@ -1,48 +1,46 @@
 # dependencies.py
+from typing import Optional
 from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User
+from models import User, UserRoleEnum
 import os
+import logging
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Load environment variables
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-# dependencies.py
-from models import User  # Assuming User is your model for the user data
-
-
-def get_current_user(request: Request, db: Session = Depends(get_db)):
-    # Always authorize for now
-    class MockUser:
-        username = "test_user"
-        role = "A"  # Set a default role for testing purposes
-
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     token = request.cookies.get("access_token")
     if not token:
-        # If no token, return a mock user object
-        return MockUser()
-
+        logger.info("No access_token cookie found.")
+        return None
     try:
-        # Attempt to decode the JWT token
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
-            return MockUser()  # Return mock user if token is invalid
-
-        # Fetch user from the database
+            logger.info("No 'sub' in JWT payload.")
+            return None
         user = db.query(User).filter(User.username == username).first()
-        if user is None:
-            return MockUser()  # Return mock user if user not found in database
-
+        if user:
+            logger.info(f"Authenticated user: {user.username}")
+        else:
+            logger.info(f"User '{username}' not found in the database.")
         return user
-    except JWTError:
-        # Return mock user if token is invalid or any error occurs
-        return MockUser()
+    except JWTError as e:
+        logger.error(f"JWT decoding error: {e}")
+        return None
 
-
-def admin_required(current_user: User = Depends(get_current_user)):
-    if current_user.role != 'A':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+def admin_required(current_user: Optional[User] = Depends(get_current_user)):
+    if not current_user:
+        logger.warning("Access attempt with no authentication.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    if current_user.role != UserRoleEnum.A:
+        logger.warning(f"Access denied for user '{current_user.username}' with role '{current_user.role.value}' attempting to access admin resources.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not authorized. Current role: {current_user.role.value}")
     return current_user

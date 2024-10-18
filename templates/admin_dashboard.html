@@ -1,69 +1,81 @@
+<!-- templates/admin_dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - FastTravel</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">The Expedition Thailand</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if user %}
+                    <li class="nav-item">
+                        <span class="navbar-text mr-3">Logged in as: {{ user.role.value }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                    {% if user.role.value == 'A' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin">Admin Dashboard</a>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signup">Signup</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
     <div class="container mt-5">
         <h1>Admin Dashboard</h1>
 
         <!-- Section: Create New Tour -->
         <h2 class="mt-4">Create New Tour</h2>
-        <form action="/admin/create_tour" method="post">
+        <form action="/admin/create_tour" method="post" enctype="multipart/form-data">
             <div class="form-group">
-                <input type="text" class="form-control" name="name" placeholder="Tour Name" required>
+                <label for="name">Tour Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
             </div>
             <div class="form-group">
-                <textarea class="form-control" name="description" placeholder="Tour Description" required></textarea>
+                <label for="description">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
             </div>
             <div class="form-group">
-                <input type="number" step="0.01" class="form-control" name="price_A" placeholder="Price for A" required>
+                <label for="price_A">Price for Admin (A)</label>
+                <input type="number" step="0.01" class="form-control" id="price_A" name="price_A" required>
             </div>
             <div class="form-group">
-                <input type="number" step="0.01" class="form-control" name="price_B" placeholder="Price for B" required>
+                <label for="price_B">Price for Business (B)</label>
+                <input type="number" step="0.01" class="form-control" id="price_B" name="price_B" required>
             </div>
             <div class="form-group">
-                <input type="number" step="0.01" class="form-control" name="price_C" placeholder="Price for C" required>
+                <label for="price_C">Price for Customer (C)</label>
+                <input type="number" step="0.01" class="form-control" id="price_C" name="price_C" required>
             </div>
             <div class="form-group">
-                <input type="text" class="form-control" name="image_url" placeholder="Image URL" required>
-            </div>
-            <div class="form-group">
-                <input type="time" class="form-control" name="available_time_start" placeholder="Available Start Time" required>
-            </div>
-            <div class="form-group">
-                <input type="time" class="form-control" name="available_time_end" placeholder="Available End Time" required>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="phone_number" placeholder="Contact Phone Number" required>
-            </div>
-            <div class="form-group">
-                <input type="email" class="form-control" name="email" placeholder="Contact Email" required>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="location" placeholder="Location" required>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="days" placeholder="Operating Days" required>
-            </div>
-            <div class="form-group">
-                <textarea class="form-control" name="itinerary" placeholder="Itinerary" required></textarea>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="tags" placeholder="Tags (comma-separated)" required>
-            </div>
-            <div class="form-group">
-                <input type="text" class="form-control" name="map" placeholder="Map URL" required>
+                <label for="image">Image Upload</label>
+                <input type="file" class="form-control-file" name="image" accept="image/*">
             </div>
             <button type="submit" class="btn btn-primary">Create Tour</button>
         </form>
 
         <!-- Section: Existing Tours -->
-        <h2 class="mt-4">Existing Tours</h2>
-        <table class="table">
+        <h2 class="mt-5">Existing Tours</h2>
+        <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -71,6 +83,7 @@
                     <th>Price A</th>
                     <th>Price B</th>
                     <th>Price C</th>
+                    <th>Image</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -83,7 +96,83 @@
                     <td>{{ tour.price_B }}</td>
                     <td>{{ tour.price_C }}</td>
                     <td>
-                        <form action="/admin/delete_tour/{{ tour.id }}" method="post">
+                        {% if tour.image_url %}
+                            <img src="{{ tour.image_url }}" alt="{{ tour.name }}" width="100">
+                        {% else %}
+                            No Image
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="/admin/delete_tour/{{ tour.id }}" method="post" onsubmit="return confirm('Are you sure you want to delete this tour?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Section: Create New Transport -->
+        <h2 class="mt-5">Create New Transport</h2>
+        <form action="/admin/create_transport" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="transport_name">Transport Name</label>
+                <input type="text" class="form-control" id="transport_name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="transport_description">Description</label>
+                <textarea class="form-control" id="transport_description" name="description" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="transport_price_A">Price for Admin (A)</label>
+                <input type="number" step="0.01" class="form-control" id="transport_price_A" name="price_A" required>
+            </div>
+            <div class="form-group">
+                <label for="transport_price_B">Price for Business (B)</label>
+                <input type="number" step="0.01" class="form-control" id="transport_price_B" name="price_B" required>
+            </div>
+            <div class="form-group">
+                <label for="transport_price_C">Price for Customer (C)</label>
+                <input type="number" step="0.01" class="form-control" id="transport_price_C" name="price_C" required>
+            </div>
+            <div class="form-group">
+                <label for="transport_image">Image Upload</label>
+                <input type="file" class="form-control-file" name="image" accept="image/*">
+            </div>
+            <button type="submit" class="btn btn-primary">Create Transport</button>
+        </form>
+
+        <!-- Section: Existing Transports -->
+        <h2 class="mt-5">Existing Transports</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Price A</th>
+                    <th>Price B</th>
+                    <th>Price C</th>
+                    <th>Image</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transport in transports %}
+                <tr>
+                    <td>{{ transport.name }}</td>
+                    <td>{{ transport.description }}</td>
+                    <td>{{ transport.price_A }}</td>
+                    <td>{{ transport.price_B }}</td>
+                    <td>{{ transport.price_C }}</td>
+                    <td>
+                        {% if transport.image_url %}
+                            <img src="{{ transport.image_url }}" alt="{{ transport.name }}" width="100">
+                        {% else %}
+                            No Image
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form action="/admin/delete_transport/{{ transport.id }}" method="post" onsubmit="return confirm('Are you sure you want to delete this transport?');">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
                     </td>
@@ -93,8 +182,8 @@
         </table>
 
         <!-- Section: Update User Roles -->
-        <h2 class="mt-4">Update User Roles</h2>
-        <table class="table">
+        <h2 class="mt-5">Update User Roles</h2>
+        <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Username</th>
@@ -109,19 +198,17 @@
                 <tr>
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
-                    <td>{{ user.role }}</td>
+                    <td>{{ user.role.value }}</td>
                     <td>
-                        <form action="/admin/update_user_role" method="post">
+                        <form action="/admin/update_user_role" method="post" class="form-inline">
                             <input type="hidden" name="user_id" value="{{ user.id }}">
-                            <select name="new_role" class="form-control">
-                                <option value="A" {% if user.role == 'A' %}selected{% endif %}>Admin</option>
-                                <option value="B" {% if user.role == 'B' %}selected{% endif %}>Business</option>
-                                <option value="C" {% if user.role == 'C' %}selected{% endif %}>Customer</option>
-                                <option value="E" {% if user.role == 'E' %}selected{% endif %}>Employee</option>
-                                <option value="O" {% if user.role == 'O' %}selected{% endif %}>Other</option>
+                            <select name="new_role" class="form-control mr-2">
+                                <option value="A" {% if user.role.value == 'A' %}selected{% endif %}>Admin</option>
+                                <option value="B" {% if user.role.value == 'B' %}selected{% endif %}>Business</option>
+                                <option value="C" {% if user.role.value == 'C' %}selected{% endif %}>Customer</option>
+                                <option value="E" {% if user.role.value == 'E' %}selected{% endif %}>Employee</option>
+                                <option value="O" {% if user.role.value == 'O' %}selected{% endif %}>Other</option>
                             </select>
-                    </td>
-                    <td>
                             <button type="submit" class="btn btn-primary btn-sm">Update Role</button>
                         </form>
                     </td>
@@ -131,6 +218,7 @@
         </table>
     </div>
 
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

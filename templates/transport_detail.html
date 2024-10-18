@@ -1,10 +1,41 @@
+<!-- templates/transport_detail.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>{{ transport.name }} - Transport Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-
+    <!-- Navbar (Optional) -->
+    <div class="container my-5">
+        <h1>{{ transport.name }}</h1>
+        {% if transport.image_url %}
+        <img src="{{ transport.image_url }}" alt="{{ transport.name }}" class="img-fluid mb-4">
+        {% endif %}
+        <p>{{ transport.description }}</p>
+        <!-- Display other details like availability, map, tags -->
+        {% if user %}
+            {% if user.role == 'A' %}
+            <p><strong>Price:</strong> {{ transport.price_A }} THB</p>
+            {% elif user.role == 'B' %}
+            <p><strong>Price:</strong> {{ transport.price_B }} THB</p>
+            {% else %}
+            <p><strong>Price:</strong> {{ transport.price_C }} THB</p>
+            {% endif %}
+        {% else %}
+            <p><strong>Price:</strong> {{ transport.price_C }} THB</p>
+        {% endif %}
+        <!-- Add to Cart Button -->
+        <form action="/cart/add" method="post">
+            <input type="hidden" name="transport_id" value="{{ transport.id }}">
+            <div class="form-group">
+                <label for="quantity">Quantity</label>
+                <input type="number" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
+            </div>
+            <button type="submit" class="btn btn-success">Add to Cart</button>
+        </form>
+    </div>
+    <!-- Scripts (Optional) -->
 </body>
 </html>

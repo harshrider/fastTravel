@@ -2,14 +2,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Meta Tags and Bootstrap CSS -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Expedition Thailand Home</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
     <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">The Expedition Thailanddd </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if user %}
+                    <li class="nav-item">
+                        <span class="navbar-text mr-3">Logged in as: {{ user.role.value }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                    {% if user.role.value == 'A' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin">Admin Dashboard</a>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signup">Signup</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
     <!-- Cover Image Section -->
-    <!-- About Us Section -->
+    <header class="jumbotron jumbotron-fluid text-center bg-primary text-white">
+        <div class="container">
+            <h1 class="display-4">Welcome to The Expedition Thailand</h1>
+            <p class="lead">Your gateway to the best tours and adventures!</p>
+        </div>
+    </header>
+
     <!-- Tours Section -->
-    <section id="tours" class="container">
+    <section id="tours" class="container my-5">
         <h2 class="my-4">Available Tours</h2>
         <div class="row">
             {% for tour in tours %}
@@ -23,17 +63,28 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ tour.name }}</h5>
                         <p class="card-text">{{ tour.description[:100] }}...</p>
-                        {% if user %}
-                            {% if user.role.value == 'A' %}
-                            <p class="card-text"><strong>Price:</strong> {{ tour.price_A }} THB</p>
-                            {% elif user.role.value == 'B' %}
-                            <p class="card-text"><strong>Price:</strong> {{ tour.price_B }} THB</p>
+                        <p class="card-text">
+                            <strong>Price:</strong>
+                            {% if user %}
+                                {% if user.role.value == 'A' %}
+                                    {{ tour.price_A }} THB
+                                {% elif user.role.value == 'B' %}
+                                    {{ tour.price_B }} THB
+                                {% else %}
+                                    {{ tour.price_C }} THB
+                                {% endif %}
                             {% else %}
-                            <p class="card-text"><strong>Price:</strong> {{ tour.price_C }} THB</p>
+                                {{ tour.price_C }} THB
                             {% endif %}
-                        {% else %}
-                            <p class="card-text"><strong>Price:</strong> {{ tour.price_C }} THB</p>
-                        {% endif %}
+                        </p>
+                        <form action="/cart/add" method="post" class="mt-2">
+                            <input type="hidden" name="tour_id" value="{{ tour.id }}">
+                            <div class="form-group">
+                                <label for="quantity">Quantity</label>
+                                <input type="number" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
+                            </div>
+                            <button type="submit" class="btn btn-success btn-sm">Add to Cart</button>
+                        </form>
                     </div>
                     <div class="card-footer">
                         <a href="/tours/{{ tour.id }}" class="btn btn-primary">View More</a>
@@ -43,8 +94,57 @@
             {% endfor %}
         </div>
     </section>
-    <!-- Transports Section (Similar to Tours Section) -->
-    <!-- Modals for Login and Signup -->
+
+    <!-- Transports Section -->
+    <section id="transports" class="container my-5">
+        <h2 class="my-4">Available Transports</h2>
+        <div class="row">
+            {% for transport in transports %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if transport.image_url %}
+                    <img src="{{ transport.image_url }}" class="card-img-top" alt="{{ transport.name }}">
+                    {% else %}
+                    <img src="/static/images/placeholder.jpg" class="card-img-top" alt="No Image Available">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ transport.name }}</h5>
+                        <p class="card-text">{{ transport.description[:100] }}...</p>
+                        <p class="card-text">
+                            <strong>Price:</strong>
+                            {% if user %}
+                                {% if user.role.value == 'A' %}
+                                    {{ transport.price_A }} THB
+                                {% elif user.role.value == 'B' %}
+                                    {{ transport.price_B }} THB
+                                {% else %}
+                                    {{ transport.price_C }} THB
+                                {% endif %}
+                            {% else %}
+                                {{ transport.price_C }} THB
+                            {% endif %}
+                        </p>
+                        <form action="/cart/add" method="post" class="mt-2">
+                            <input type="hidden" name="transport_id" value="{{ transport.id }}">
+                            <div class="form-group">
+                                <label for="quantity">Quantity</label>
+                                <input type="number" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
+                            </div>
+                            <button type="submit" class="btn btn-success btn-sm">Add to Cart</button>
+                        </form>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/transports/{{ transport.id }}" class="btn btn-primary">View More</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
     <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

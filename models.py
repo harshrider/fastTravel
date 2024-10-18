@@ -1,64 +1,80 @@
 # models.py
-from sqlalchemy import Column, Integer, String, Float, Enum, DateTime, ForeignKey, Time, Text
+from enum import Enum as PyEnum  # Alias Python's Enum to PyEnum
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 from database import Base
-import enum
-from datetime import datetime
 
-class UserRoleEnum(enum.Enum):
-    A = 'A'
-    B = 'B'
-    C = 'C'
-    E = 'E'
-    O = 'O'
+
+class UserRoleEnum(PyEnum):
+    A = "A"  # Admin
+    B = "B"  # Business
+    C = "C"  # Customer
+    E = "E"  # Employee
+    O = "O"  # Other
+
 
 class User(Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(255), unique=True, index=True, nullable=False)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(UserRoleEnum), nullable=False)
-    credit = Column(Float, default=0.0)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.C, nullable=False)
 
     # Relationships
-    #invoices = relationship("Invoice", back_populates="user")
-    # Other relationships...
+    carts = relationship("Cart", back_populates="user")
+
 
 class Tour(Base):
-    __tablename__ = 'tours'
+    __tablename__ = "tours"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    price_A = Column(Float)
-    price_B = Column(Float)
-    price_C = Column(Float)
-    image_url = Column(String(255))
-    available_time_start = Column(Time)
-    available_time_end = Column(Time)
-    phone_number = Column(String(50))
-    email = Column(String(255))
-    location = Column(String(50))  # Adjust to use an Enum if needed
-    days = Column(String(255))
-    itinerary = Column(Text)
-    tags = Column(String(255))
-    map = Column(String(255))
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String, nullable=False)
+    price_A = Column(Float, nullable=False)
+    price_B = Column(Float, nullable=False)
+    price_C = Column(Float, nullable=False)
+    image_url = Column(String, nullable=True)
 
-    # Relationships
-    availability = relationship("TourAvailability", back_populates="tour")
+    # Add other fields as needed
 
-class TourAvailability(Base):
-    __tablename__ = 'tour_availability'
+
+class Transport(Base):
+    __tablename__ = "transports"
 
     id = Column(Integer, primary_key=True, index=True)
-    tour_id = Column(Integer, ForeignKey('tours.id'), nullable=False)
-    date = Column(DateTime, nullable=False)
-    status = Column(String(50))
-    stock = Column(Integer)
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String, nullable=False)
+    price_A = Column(Float, nullable=False)
+    price_B = Column(Float, nullable=False)
+    price_C = Column(Float, nullable=False)
+    image_url = Column(String, nullable=True)
+
+    # Add other fields as needed
+
+
+class Cart(Base):
+    __tablename__ = "carts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # Relationships
-    tour = relationship("Tour", back_populates="availability")
+    user = relationship("User", back_populates="carts")
+    items = relationship("CartItem", back_populates="cart")
 
-# Define other models (Transport, TransportAvailability, Invoice, etc.)
+
+class CartItem(Base):
+    __tablename__ = "cart_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cart_id = Column(Integer, ForeignKey("carts.id"), nullable=False)
+    tour_id = Column(Integer, ForeignKey("tours.id"), nullable=True)
+    transport_id = Column(Integer, ForeignKey("transports.id"), nullable=True)
+    quantity = Column(Integer, default=1, nullable=False)
+
+    # Relationships
+    cart = relationship("Cart", back_populates="items")
+    tour = relationship("Tour")
+    transport = relationship("Transport")

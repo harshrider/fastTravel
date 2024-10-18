@@ -1,0 +1,52 @@
+<!-- templates/cart.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Cart</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <!-- Navbar (Optional) -->
+    <div class="container my-5">
+        <h1>Your Cart</h1>
+        {% if cart_items %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Item Type</th>
+                        <th>Name</th>
+                        <th>Price (THB)</th>
+                        <th>No. of Adults</th>
+                        <th>Total (THB)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.type }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.total }}</td>
+                        <td>
+                            <form action="/cart/remove" method="post">
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <!-- Optionally, add a Checkout button -->
+            <a href="/checkout" class="btn btn-success">Proceed to Checkout</a>
+            <a href="/cart/download_itinerary" class="btn btn-info ml-2">Download Itinerary</a>
+        {% else %}
+            <p>Your cart is empty.</p>
+        {% endif %}
+    </div>
+    <!-- Scripts (Optional) -->
+</body>
+</html>

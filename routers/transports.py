@@ -1,16 +1,17 @@
-# routers/tours.py
+# routers/transports.py
 from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from models import Tour
+from models import Transport
 from fastapi.templating import Jinja2Templates
+from dependencies import get_current_user  # <-- Added Import
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-@router.get("/tours/{tour_id}")
-def tour_detail(tour_id: int, request: Request, db: Session = Depends(get_db)):
-    tour = db.query(Tour).filter(Tour.id == tour_id).first()
-    if not tour:
-        raise HTTPException(status_code=404, detail="Tour not found")
-    return templates.TemplateResponse("tour_detail.html", {"request": request, "tour": tour})
+@router.get("/transports/{transport_id}")
+def transport_detail(transport_id: int, request: Request, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    transport = db.query(Transport).filter(Transport.id == transport_id).first()
+    if not transport:
+        raise HTTPException(status_code=404, detail="Transport not found")
+    return templates.TemplateResponse("transport_detail.html", {"request": request, "transport": transport, "user": current_user})

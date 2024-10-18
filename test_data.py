@@ -1,8 +1,9 @@
-# populate_test_data.py
+# test_data.py
+from routers.auth import get_password_hash  # Corrected import statement
 from sqlalchemy.orm import Session
+
 from database import engine, Base, SessionLocal
-from models import User, Tour, TourAvailability, UserRoleEnum
-from datetime import datetime, timedelta
+from models import User, Tour, Transport, Cart, CartItem, UserRoleEnum
 
 # Create all tables in the database (in case they haven't been created yet)
 Base.metadata.create_all(bind=engine)
@@ -14,20 +15,44 @@ def populate_data():
 
     try:
         # Clear existing data
+        db.query(CartItem).delete()
+        db.query(Cart).delete()
         db.query(User).delete()
         db.query(Tour).delete()
-        db.query(TourAvailability).delete()
+        db.query(Transport).delete()
 
         # Create sample users
-        user1 = User(username="user1", email="user1@example.com", password_hash="hashed_password1", role=UserRoleEnum.A,
-                     credit=100.0)
-        user2 = User(username="user2", email="user2@example.com", password_hash="hashed_password2", role=UserRoleEnum.B,
-                     credit=200.0)
-        user3 = User(username="user3", email="user3@example.com", password_hash="hashed_password3", role=UserRoleEnum.C,
-                     credit=300.0)
+        user1 = User(
+            username="admin",
+            email="admin@example.com",
+            password_hash=get_password_hash("1"),
+            role=UserRoleEnum.A
+        )
+        user2 = User(
+            username="business",
+            email="business@example.com",
+            password_hash=get_password_hash("1"),
+            role=UserRoleEnum.B
+        )
+        user3 = User(
+            username="customer",
+            email="customer@example.com",
+            password_hash=get_password_hash("1"),
+            role=UserRoleEnum.C
+        )
 
-        # Add users to the session
+        # Add users to the session and commit
         db.add_all([user1, user2, user3])
+        db.commit()  # Commit to get IDs assigned
+        db.refresh(user1)
+        db.refresh(user2)
+        db.refresh(user3)
+
+        # Create sample carts
+        cart1 = Cart(user_id=user3.id)
+        db.add(cart1)
+        db.commit()
+        db.refresh(cart1)
 
         # Create sample tours
         tour1 = Tour(
@@ -36,16 +61,7 @@ def populate_data():
             price_A=1000.0,
             price_B=1200.0,
             price_C=1500.0,
-            image_url="static/images/tour1.jpg",
-            available_time_start=datetime.strptime("08:00", "%H:%M").time(),
-            available_time_end=datetime.strptime("18:00", "%H:%M").time(),
-            phone_number="1234567890",
-            email="tour@example.com",
-            location="Bangkok",
-            days="Monday, Wednesday, Friday",
-            itinerary="Morning city tour, afternoon river cruise.",
-            tags="adventure,city",
-            map="https://maps.example.com/bangkok_adventure"
+            image_url="static/images/tour1.jpg"
         )
 
         tour2 = Tour(
@@ -54,38 +70,54 @@ def populate_data():
             price_A=1500.0,
             price_B=1800.0,
             price_C=2000.0,
-            image_url="static/images/tour2.jpg",
-            available_time_start=datetime.strptime("09:00", "%H:%M").time(),
-            available_time_end=datetime.strptime("17:00", "%H:%M").time(),
-            phone_number="0987654321",
-            email="tour2@example.com",
-            location="Chiang Mai",
-            days="Tuesday, Thursday, Saturday",
-            itinerary="Mountain trekking, elephant sanctuary visit.",
-            tags="nature,relaxation",
-            map="https://maps.example.com/chiang_mai_nature"
+            image_url="static/images/tour2.jpg"
         )
 
         # Add tours to the session
         db.add_all([tour1, tour2])
 
-        # Create sample tour availability
-        tour_availability1 = TourAvailability(
-            tour_id=1,
-            date=datetime.now(),
-            status="available",
-            stock=20
+        # Create sample transports
+        transport1 = Transport(
+            name="Van Rental",
+            description="Comfortable vans for group travel.",
+            price_A=500.0,
+            price_B=600.0,
+            price_C=700.0,
+            image_url="static/images/transport1.jpg"
         )
 
-        tour_availability2 = TourAvailability(
-            tour_id=2,
-            date=datetime.now() + timedelta(days=1),
-            status="available",
-            stock=15
+        transport2 = Transport(
+            name="Bike Rental",
+            description="Rent bikes to explore at your own pace.",
+            price_A=200.0,
+            price_B=250.0,
+            price_C=300.0,
+            image_url="static/images/transport2.jpg"
         )
 
-        # Add tour availability to the session
-        db.add_all([tour_availability1, tour_availability2])
+        # Add transports to the session
+        db.add_all([transport1, transport2])
+
+        # Create sample carts
+        cart1 = Cart(user_id=user3.id)
+        db.add(cart1)
+        db.commit()
+        db.refresh(cart1)
+
+        # Create sample cart items
+        cart_item1 = CartItem(
+            cart_id=cart1.id,
+            tour_id=tour1.id,
+            quantity=2
+        )
+        cart_item2 = CartItem(
+            cart_id=cart1.id,
+            transport_id=transport2.id,
+            quantity=1
+        )
+
+        # Add cart items to the session
+        db.add_all([cart_item1, cart_item2])
 
         # Commit all changes to the database
         db.commit()
