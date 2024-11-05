@@ -1,0 +1,69 @@
+# IntelliJ and JetBrains related
+.idea/
+*.iml
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Environment files
+.env
+*.env
+
+# Virtual environment
+venv/
+.venv/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+.DS_Store
+
+# Database files (if using local SQLite for testing)
+*.db
+*.sqlite3
+
+# Python dependencies
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Build files
+build/
+dist/
+
+# Jupyter Notebooks checkpoints (if any)
+.ipynb_checkpoints/
+
+# Static files
+staticfiles/
+mediafiles/
+
+# System files
+Thumbs.db
+ehthumbs.db
+
+# Coverage reports
+htmlcov/
+*.cover
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# pytest
+.pytest_cache/
+.tox/
+
+# Mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+/databaseBasic
+tour1.jpg
+tour2.jpg
+transport1.jpg
+transport2.jpg
