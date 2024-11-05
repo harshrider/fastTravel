@@ -1,15 +1,14 @@
-
-# routers/admin.py
 from fastapi import APIRouter, Depends, Request, HTTPException, status, Form, UploadFile, File
 from sqlalchemy.orm import Session
 from dependencies import admin_required, get_db
-from models import Tour, User, UserRoleEnum, Transport, Tag, Image
+from models import Tour, Transport, User, UserRoleEnum, Tag, Image
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 import os
 from uuid import uuid4
-from typing import Optional, List
+from typing import List
 import logging
+from datetime import datetime
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -22,7 +21,7 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db), current_use
         tours = db.query(Tour).all()
         transports = db.query(Transport).all()
         users = db.query(User).all()
-        tags = db.query(Tag).all()  # Fetch all tags for display
+        tags = db.query(Tag).all()
     except Exception as e:
         logger.error(f"Error retrieving admin dashboard data: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
@@ -35,15 +34,20 @@ async def create_tour(
         price_A: float = Form(...),
         price_B: float = Form(...),
         price_C: float = Form(...),
+        start_time: str = Form(...),
+        end_time: str = Form(...),
+        max_tickets: int = Form(...),
         images: List[UploadFile] = File(None),
-        tags: str = Form(...),  # e.g., "Gold,Adventure"
+        tags: str = Form(...),
         db: Session = Depends(get_db),
         current_user: User = Depends(admin_required)
 ):
-    tag_names = [tag.strip() for tag in tags.split(',')]
+    start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+    end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+
+    tag_names = {tag.strip().upper() for tag in tags.split(',')}
     tag_objects = [db.query(Tag).filter_by(name=name).first() or Tag(name=name) for name in tag_names]
 
-    # Handle image upload logic
     image_urls = []
     for image in images:
         file_extension = os.path.splitext(image.filename)[1]
@@ -53,14 +57,72 @@ async def create_tour(
         file_path = os.path.join(upload_directory, unique_filename)
         with open(file_path, "wb") as buffer:
             buffer.write(await image.read())
-        image_url = f"/static/uploads/{unique_filename}"
-        image_urls.append(Image(url=image_url))
+        image_urls.append(Image(url=f"/static/uploads/{unique_filename}"))
 
-    # Save new Tour with tags and images
-    new_tour = Tour(name=name, description=description, price_A=price_A, price_B=price_B, price_C=price_C, tags=tag_objects, images=image_urls)
+    new_tour = Tour(
+        name=name,
+        description=description,
+        price_A=price_A,
+        price_B=price_B,
+        price_C=price_C,
+        start_time=start_time_obj,
+        end_time=end_time_obj,
+        max_tickets=max_tickets,
+        tags=tag_objects,
+        images=image_urls
+    )
     db.add(new_tour)
     db.commit()
     logger.info(f"Tour '{name}' created successfully with ID {new_tour.id}")
+    return RedirectResponse(url="/admin", status_code=303)
+
+@router.post("/admin/create_transport")
+async def create_transport(
+        name: str = Form(...),
+        description: str = Form(...),
+        price_A: float = Form(...),
+        price_B: float = Form(...),
+        price_C: float = Form(...),
+        start_time: str = Form(...),
+        end_time: str = Form(...),
+        max_seats: int = Form(...),
+        images: List[UploadFile] = File(None),
+        tags: str = Form(...),
+        db: Session = Depends(get_db),
+        current_user: User = Depends(admin_required)
+):
+    start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+    end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+
+    tag_names = {tag.strip().upper() for tag in tags.split(',')}
+    tag_objects = [db.query(Tag).filter_by(name=name).first() or Tag(name=name) for name in tag_names]
+
+    image_urls = []
+    for image in images:
+        file_extension = os.path.splitext(image.filename)[1]
+        unique_filename = f"{uuid4()}{file_extension}"
+        upload_directory = "static/uploads"
+        os.makedirs(upload_directory, exist_ok=True)
+        file_path = os.path.join(upload_directory, unique_filename)
+        with open(file_path, "wb") as buffer:
+            buffer.write(await image.read())
+        image_urls.append(Image(url=f"/static/uploads/{unique_filename}"))
+
+    new_transport = Transport(
+        name=name,
+        description=description,
+        price_A=price_A,
+        price_B=price_B,
+        price_C=price_C,
+        start_time=start_time_obj,
+        end_time=end_time_obj,
+        max_seats=max_seats,
+        tags=tag_objects,
+        images=image_urls
+    )
+    db.add(new_transport)
+    db.commit()
+    logger.info(f"Transport '{name}' created successfully with ID {new_transport.id}")
     return RedirectResponse(url="/admin", status_code=303)
 
 @router.post("/admin/delete_tour/{tour_id}")
@@ -69,7 +131,7 @@ def delete_tour(tour_id: int, db: Session = Depends(get_db), current_user: User 
     try:
         tour = db.query(Tour).filter(Tour.id == tour_id).first()
         if not tour:
-            logger.warning(f"Tour with ID {tour_id} not found.")
+            logger.warning(f"Tour with ID {tour_id} not foundd.")
             raise HTTPException(status_code=404, detail="Tour not found")
         if tour.images:
             for image in tour.images:

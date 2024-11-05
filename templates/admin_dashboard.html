@@ -65,6 +65,18 @@
                 <input type="number" id="price_C" step="0.01" class="form-control" name="price_C" required>
             </div>
             <div class="form-group">
+                <label for="start_time">Start Time</label>
+                <input type="time" id="start_time" class="form-control" name="start_time" required>
+            </div>
+            <div class="form-group">
+                <label for="end_time">End Time</label>
+                <input type="time" id="end_time" class="form-control" name="end_time" required>
+            </div>
+            <div class="form-group">
+                <label for="max_tickets">Max Tickets per Day</label>
+                <input type="number" id="max_tickets" class="form-control" name="max_tickets" required>
+            </div>
+            <div class="form-group">
                 <label for="tags">Tags (comma-separated)</label>
                 <input type="text" id="tags" class="form-control" name="tags" placeholder="e.g., Gold, Adventure">
             </div>
@@ -85,6 +97,9 @@
                     <th>Price A</th>
                     <th>Price B</th>
                     <th>Price C</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Max Tickets</th>
                     <th>Image</th>
                     <th>Action</th>
                 </tr>
@@ -97,6 +112,9 @@
                     <td>{{ tour.price_A }}</td>
                     <td>{{ tour.price_B }}</td>
                     <td>{{ tour.price_C }}</td>
+                    <td>{{ tour.start_time }}</td>
+                    <td>{{ tour.end_time }}</td>
+                    <td>{{ tour.max_tickets }}</td>
                     <td>
                         {% if tour.images %}
                             <img src="{{ tour.images[0].url }}" alt="{{ tour.name }} Image" width="100">
@@ -114,7 +132,7 @@
             </tbody>
         </table>
 
-        <!-- Section: Create New Transport -->
+                <!-- Section: Create New Transport -->
         <h2 class="mt-5">Create New Transport</h2>
         <form action="/admin/create_transport" method="post" enctype="multipart/form-data">
             <div class="form-group">
@@ -138,11 +156,28 @@
                 <input type="number" id="transport_price_C" step="0.01" class="form-control" name="price_C" required>
             </div>
             <div class="form-group">
+                <label for="transport_start_time">Start Time</label>
+                <input type="time" id="transport_start_time" class="form-control" name="start_time" required>
+            </div>
+            <div class="form-group">
+                <label for="transport_end_time">End Time</label>
+                <input type="time" id="transport_end_time" class="form-control" name="end_time" required>
+            </div>
+            <div class="form-group">
+                <label for="max_seats">Max Seats per Day</label>
+                <input type="number" id="max_seats" class="form-control" name="max_seats" required>
+            </div>
+            <div class="form-group">
+                <label for="transport_tags">Tags (comma-separated)</label>
+                <input type="text" id="transport_tags" class="form-control" name="tags" placeholder="e.g., Gold, Adventure">
+            </div>
+            <div class="form-group">
                 <label for="transport_images">Upload Images</label>
                 <input type="file" id="transport_images" class="form-control-file" name="images" accept="image/*" multiple>
             </div>
             <button type="submit" class="btn btn-primary">Create Transport</button>
         </form>
+    </div>
 
         <!-- Section: Existing Transports -->
         <h2 class="mt-5">Existing Transports</h2>
@@ -154,6 +189,9 @@
                     <th>Price A</th>
                     <th>Price B</th>
                     <th>Price C</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Max Seats</th>
                     <th>Image</th>
                     <th>Action</th>
                 </tr>
@@ -166,6 +204,9 @@
                     <td>{{ transport.price_A }}</td>
                     <td>{{ transport.price_B }}</td>
                     <td>{{ transport.price_C }}</td>
+                    <td>{{ transport.start_time }}</td>
+                    <td>{{ transport.end_time }}</td>
+                    <td>{{ transport.max_seats }}</td>
                     <td>
                         {% if transport.images %}
                             <img src="{{ transport.images[0].url }}" alt="{{ transport.name }} Image" width="100">
@@ -176,42 +217,6 @@
                     <td>
                         <form action="/admin/delete_transport/{{ transport.id }}" method="post" onsubmit="return confirm('Are you sure you want to delete this transport?');">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Section: Update User Roles -->
-        <h2 class="mt-5">Update User Roles</h2>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Current Role</th>
-                    <th>New Role</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.role.value }}</td>
-                    <td>
-                        <form action="/admin/update_user_role" method="post" class="form-inline">
-                            <input type="hidden" name="user_id" value="{{ user.id }}">
-                            <select name="new_role" class="form-control mr-2">
-                                <option value="A" {% if user.role.value =='A' %}selected{% endif %}>Admin</option>
-                                <option value="B" {% if user.role.value =='B' %}selected{% endif %}>Business</option>
-                                <option value="C" {% if user.role.value =='C' %}selected{% endif %}>Customer</option>
-                                <option value="E" {% if user.role.value =='E' %}selected{% endif %}>Employee</option>
-                                <option value="O" {% if user.role.value =='O' %}selected{% endif %}>Other</option>
-                            </select>
-                            <button type="submit" class="btn btn-primary btn-sm">Update Role</button>
                         </form>
                     </td>
                 </tr>

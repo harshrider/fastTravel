@@ -1,6 +1,5 @@
-# models.py
 from enum import Enum as PyEnum
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Table, Enum as SQLAlchemyEnum
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Table, Enum as SQLAlchemyEnum, Date, Time, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -59,11 +58,15 @@ class Tour(Base):
     price_A = Column(Float, nullable=False)
     price_B = Column(Float, nullable=False)
     price_C = Column(Float, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+    max_tickets = Column(Integer, nullable=False)  # Max tickets per day
     image_url = Column(String, nullable=True)  # Legacy field if needed
 
     # Relationships
     tags = relationship("Tag", secondary=tour_tag_association, backref="tours")
     images = relationship("Image", primaryjoin="Tour.id == Image.tour_id")
+    availabilities = relationship("TourAvailability", back_populates="tour")
 
 class Transport(Base):
     __tablename__ = "transports"
@@ -74,11 +77,39 @@ class Transport(Base):
     price_A = Column(Float, nullable=False)
     price_B = Column(Float, nullable=False)
     price_C = Column(Float, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
+    max_seats = Column(Integer, nullable=False)  # Max seats per day
     image_url = Column(String, nullable=True)  # Legacy field if needed
 
     # Relationships
     tags = relationship("Tag", secondary=transport_tag_association, backref="transports")
     images = relationship("Image", primaryjoin="Transport.id == Image.transport_id")
+    availabilities = relationship("TransportAvailability", back_populates="transport")
+
+class TourAvailability(Base):
+    __tablename__ = "tour_availabilities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tour_id = Column(Integer, ForeignKey("tours.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    available_tickets = Column(Integer, nullable=False)
+    is_available = Column(Boolean, default=True)
+
+    # Relationships
+    tour = relationship("Tour", back_populates="availabilities")
+
+class TransportAvailability(Base):
+    __tablename__ = "transport_availabilities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    transport_id = Column(Integer, ForeignKey("transports.id"), nullable=False)
+    date = Column(Date, nullable=False)
+    available_seats = Column(Integer, nullable=False)
+    is_available = Column(Boolean, default=True)
+
+    # Relationships
+    transport = relationship("Transport", back_populates="availabilities")
 
 class Cart(Base):
     __tablename__ = "carts"

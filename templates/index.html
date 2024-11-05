@@ -1,4 +1,3 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,35 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Expedition Thailand Home</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+            background-color: black;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">The Expedition Thailanddd </a>
+        <a class="navbar-brand" href="/">The Expedition Thailand</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="#tours">Tours</a></li>
+                <li class="nav-item"><a class="nav-link" href="#transports">Transports</a></li>
+                <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="/contact">Contact Us</a></li>
+            </ul>
             <ul class="navbar-nav ml-auto">
                 {% if user %}
                     <li class="nav-item">
-                        <span class="navbar-text mr-3">Logged in as: {{ user.role.value }}</span>
+                        <span class="navbar-text mr-3">Welcome, {{ user.username }}</span>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logout">Logout</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
                     {% if user.role.value == 'A' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/admin">Admin Dashboard</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/admin">Admin Dashboard</a></li>
                     {% endif %}
                 {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/signup">Signup</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/signup">Signup</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -48,40 +54,37 @@
         </div>
     </header>
 
-    <!-- Tours Section -->
+    <!-- Search Bar -->
+    <div class="container my-4">
+        <input type="text" id="search-bar" class="form-control" placeholder="Search Tours and Transports...">
+    </div>
+
+    <!-- Tours Section with Pagination -->
     <section id="tours" class="container my-5">
         <h2 class="my-4">Available Tours</h2>
-        <div class="row">
-            {% for tour in tours %}
-            <div class="col-md-4 mb-4">
+        <div class="row" id="tour-list">
+            {% for tour in tours[:6] %}
+            <div class="col-md-4 mb-4 filter-item" data-name="{{ tour.name }}" data-description="{{ tour.description }}">
                 <div class="card h-100">
-                    {% if tour.image_url %}
-                    <img src="{{ tour.image_url }}" class="card-img-top" alt="{{ tour.name }}">
-                    {% else %}
-                    <img src="/static/images/placeholder.jpg" class="card-img-top" alt="No Image Available">
-                    {% endif %}
+                    <img src="{{ tour.image_url or '/static/images/placeholder.jpg' }}" class="card-img-top" alt="{{ tour.name }}">
+
                     <div class="card-body">
                         <h5 class="card-title">{{ tour.name }}</h5>
                         <p class="card-text">{{ tour.description[:100] }}...</p>
                         <p class="card-text">
                             <strong>Price:</strong>
                             {% if user %}
-                                {% if user.role.value == 'A' %}
-                                    {{ tour.price_A }} THB
-                                {% elif user.role.value == 'B' %}
-                                    {{ tour.price_B }} THB
-                                {% else %}
-                                    {{ tour.price_C }} THB
+                                {% if user.role.value == 'A' %}{{ tour.price_A }} THB
+                                {% elif user.role.value == 'B' %}{{ tour.price_B }} THB
+                                {% else %}{{ tour.price_C }} THB
                                 {% endif %}
-                            {% else %}
-                                {{ tour.price_C }} THB
-                            {% endif %}
+                            {% else %}{{ tour.price_C }} THB{% endif %}
                         </p>
                         <form action="/cart/add" method="post" class="mt-2">
                             <input type="hidden" name="tour_id" value="{{ tour.id }}">
                             <div class="form-group">
-                                <label for="quantity">Quantity</label>
-                                <input type="number" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
+                                <label for="quantity{{ tour.id }}">Quantity</label>
+                                <input type="number" id="quantity{{ tour.id }}" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
                             </div>
                             <button type="submit" class="btn btn-success btn-sm">Add to Cart</button>
                         </form>
@@ -93,42 +96,39 @@
             </div>
             {% endfor %}
         </div>
+        {% if tours|length > 6 %}
+            <div class="text-center mt-4">
+                <a href="/tours/page/2" class="btn btn-secondary">See More Tours</a>
+            </div>
+        {% endif %}
     </section>
 
-    <!-- Transports Section -->
+    <!-- Transports Section with Pagination -->
     <section id="transports" class="container my-5">
         <h2 class="my-4">Available Transports</h2>
-        <div class="row">
-            {% for transport in transports %}
-            <div class="col-md-4 mb-4">
+        <div class="row" id="transport-list">
+            {% for transport in transports[:6] %}
+            <div class="col-md-4 mb-4 filter-item" data-name="{{ transport.name }}" data-description="{{ transport.description }}">
                 <div class="card h-100">
-                    {% if transport.image_url %}
-                    <img src="{{ transport.image_url }}" class="card-img-top" alt="{{ transport.name }}">
-                    {% else %}
-                    <img src="/static/images/placeholder.jpg" class="card-img-top" alt="No Image Available">
-                    {% endif %}
+                    <img src="{{ transport.image_url or '/static/images/placeholder.jpg' }}" class="card-img-top" alt="{{ transport.name }}">
+
                     <div class="card-body">
                         <h5 class="card-title">{{ transport.name }}</h5>
                         <p class="card-text">{{ transport.description[:100] }}...</p>
                         <p class="card-text">
                             <strong>Price:</strong>
                             {% if user %}
-                                {% if user.role.value == 'A' %}
-                                    {{ transport.price_A }} THB
-                                {% elif user.role.value == 'B' %}
-                                    {{ transport.price_B }} THB
-                                {% else %}
-                                    {{ transport.price_C }} THB
+                                {% if user.role.value == 'A' %}{{ transport.price_A }} THB
+                                {% elif user.role.value == 'B' %}{{ transport.price_B }} THB
+                                {% else %}{{ transport.price_C }} THB
                                 {% endif %}
-                            {% else %}
-                                {{ transport.price_C }} THB
-                            {% endif %}
+                            {% else %}{{ transport.price_C }} THB{% endif %}
                         </p>
                         <form action="/cart/add" method="post" class="mt-2">
                             <input type="hidden" name="transport_id" value="{{ transport.id }}">
                             <div class="form-group">
-                                <label for="quantity">Quantity</label>
-                                <input type="number" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
+                                <label for="quantity{{ transport.id }}">Quantity</label>
+                                <input type="number" id="quantity{{ transport.id }}" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
                             </div>
                             <button type="submit" class="btn btn-success btn-sm">Add to Cart</button>
                         </form>
@@ -140,11 +140,28 @@
             </div>
             {% endfor %}
         </div>
+        {% if transports|length > 6 %}
+            <div class="text-center mt-4">
+                <a href="/transports/page/2" class="btn btn-secondary">See More Transports</a>
+            </div>
+        {% endif %}
     </section>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Search Functionality Script -->
+    <script>
+        document.getElementById("search-bar").addEventListener("input", function() {
+            const query = this.value.toLowerCase();
+            document.querySelectorAll(".filter-item").forEach(item => {
+                const name = item.getAttribute("data-name").toLowerCase();
+                const description = item.getAttribute("data-description").toLowerCase();
+                item.style.display = (name.includes(query) || description.includes(query)) ? "" : "none";
+            });
+        });
+    </script>
 </body>
 </html>
