@@ -2,41 +2,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Meta Tags and Bootstrap CSS -->
+    <meta charset="UTF-8">
     <title>{{ tour.name }} - Tour Details</title>
 </head>
 <body>
-    <!-- Navbar -->
     <div class="container my-5">
         <h1>{{ tour.name }}</h1>
-        {% if tour.image_url %}
-        <img src="{{ tour.image_url }}" alt="{{ tour.name }}" class="img-fluid mb-4">
-        {% endif %}
-        <p>{{ tour.description }}</p>
-        <h3>Itinerary</h3>
-        <p>{{ tour.itinerary }}</p>
-        <!-- Display other details like availability, map, tags -->
-        {% if user %}
-            {% if user.role.value == 'A' %}
-            <p><strong>Price:</strong> {{ tour.price_A }} THB</p>
-            {% elif user.role.value == 'B' %}
-            <p><strong>Price:</strong> {{ tour.price_B }} THB</p>
+
+        <!-- Image Carousel -->
+        <div id="tourCarousel" class="carousel slide" data-ride="carousel">
+            <div class="carousel-inner">
+                {% for image in tour.images %}
+                    <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+                        <img src="{{ image.url }}" alt="{{ tour.name }} Image {{ loop.index }}" class="img-fluid mb-4">
+                    </div>
+                {% endfor %}
+            </div>
+            <a class="carousel-control-prev" href="#tourCarousel" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#tourCarousel" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+            </a>
+        </div>
+
+        <!-- Display Tags -->
+        <div class="tags">
+            {% for tag in tour.tags %}
+                <span class="badge badge-info">{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+
+        <h3>Pricing</h3>
+        <p>
+            {% if user %}
+                {% if user.role == 'A' %}
+                    Price: {{ tour.price_A }} THB
+                {% elif user.role == 'B' %}
+                    Price: {{ tour.price_B }} THB
+                {% else %}
+                    Price: {{ tour.price_C }} THB
+                {% endif %}
             {% else %}
-            <p><strong>Price:</strong> {{ tour.price_C }} THB</p>
+                Price: {{ tour.price_C }} THB
             {% endif %}
-        {% else %}
-            <p><strong>Price:</strong> {{ tour.price_C }} THB</p>
-        {% endif %}
-        <!-- Add to Cart Button -->
+        </p>
+
+        <!-- Quantity and Add to Cart Form -->
         <form action="/cart/add" method="post">
             <input type="hidden" name="tour_id" value="{{ tour.id }}">
             <div class="form-group">
                 <label for="quantity">Quantity</label>
-                <input type="number" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
+                <input type="number" id="quantity" name="quantity" value="1" min="1" class="form-control" style="width: 100px;">
             </div>
             <button type="submit" class="btn btn-success">Add to Cart</button>
         </form>
     </div>
-    <!-- Scripts -->
 </body>
 </html>

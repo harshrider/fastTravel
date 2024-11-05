@@ -13,4 +13,9 @@ def tour_detail(tour_id: int, request: Request, db: Session = Depends(get_db)):
     tour = db.query(Tour).filter(Tour.id == tour_id).first()
     if not tour:
         raise HTTPException(status_code=404, detail="Tour not found")
-    return templates.TemplateResponse("tour_detail.html", {"request": request, "tour": tour})
+    return templates.TemplateResponse("tour_detail.html", {
+        "request": request,
+        "tour": tour,
+        "tags": tour.tags,     # Pass tags to template
+        "images": tour.images  # Pass images to template
+    })

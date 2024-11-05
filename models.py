@@ -1,9 +1,21 @@
 # models.py
-from enum import Enum as PyEnum  # Alias Python's Enum to PyEnum
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum as SQLAlchemyEnum
+from enum import Enum as PyEnum
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Table, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 from database import Base
 
+# Association tables for many-to-many relationships
+tour_tag_association = Table(
+    "tour_tag_association", Base.metadata,
+    Column("tour_id", Integer, ForeignKey("tours.id"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True)
+)
+
+transport_tag_association = Table(
+    "transport_tag_association", Base.metadata,
+    Column("transport_id", Integer, ForeignKey("transports.id"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True)
+)
 
 class UserRoleEnum(PyEnum):
     A = "A"  # Admin
@@ -11,7 +23,6 @@ class UserRoleEnum(PyEnum):
     C = "C"  # Customer
     E = "E"  # Employee
     O = "O"  # Other
-
 
 class User(Base):
     __tablename__ = "users"
@@ -25,6 +36,19 @@ class User(Base):
     # Relationships
     carts = relationship("Cart", back_populates="user")
 
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+
+class Image(Base):
+    __tablename__ = "images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    url = Column(String, nullable=False)
+    tour_id = Column(Integer, ForeignKey("tours.id"), nullable=True)
+    transport_id = Column(Integer, ForeignKey("transports.id"), nullable=True)
 
 class Tour(Base):
     __tablename__ = "tours"
@@ -35,10 +59,11 @@ class Tour(Base):
     price_A = Column(Float, nullable=False)
     price_B = Column(Float, nullable=False)
     price_C = Column(Float, nullable=False)
-    image_url = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)  # Legacy field if needed
 
-    # Add other fields as needed
-
+    # Relationships
+    tags = relationship("Tag", secondary=tour_tag_association, backref="tours")
+    images = relationship("Image", primaryjoin="Tour.id == Image.tour_id")
 
 class Transport(Base):
     __tablename__ = "transports"
@@ -49,10 +74,11 @@ class Transport(Base):
     price_A = Column(Float, nullable=False)
     price_B = Column(Float, nullable=False)
     price_C = Column(Float, nullable=False)
-    image_url = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)  # Legacy field if needed
 
-    # Add other fields as needed
-
+    # Relationships
+    tags = relationship("Tag", secondary=transport_tag_association, backref="transports")
+    images = relationship("Image", primaryjoin="Transport.id == Image.transport_id")
 
 class Cart(Base):
     __tablename__ = "carts"
@@ -63,7 +89,6 @@ class Cart(Base):
     # Relationships
     user = relationship("User", back_populates="carts")
     items = relationship("CartItem", back_populates="cart")
-
 
 class CartItem(Base):
     __tablename__ = "cart_items"
