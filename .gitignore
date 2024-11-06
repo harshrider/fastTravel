@@ -67,7 +67,7 @@ tour1.jpg
 tour2.jpg
 transport1.jpg
 transport2.jpg
-static\uploads
+#static\uploads
 \.idea
 TravelWebsite
 
