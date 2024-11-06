@@ -54,33 +54,31 @@
         </div>
     </header>
 
-    <!-- Search Bar with Filters -->
-<div class="container my-4">
-    <div class="input-group">
-        <input type="text" id="search-bar" class="form-control" placeholder="Search Tours and Transports...">
-        <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" id="search-button">Search</button>
+     <!-- Search Bar with Filters -->
+    <div class="container my-4">
+        <div class="input-group">
+            <input type="text" id="search-bar" class="form-control" placeholder="Search Tours and Transports...">
+        </div>
+        <div class="mt-2">
+            <label><input type="checkbox" id="filter-title" checked> Title</label>
+            <label class="ml-3"><input type="checkbox" id="filter-description" checked> Description</label>
+            <label class="ml-3"><input type="checkbox" id="filter-tags" checked> Tags</label>
         </div>
     </div>
-    <div class="mt-2">
-        <label><input type="checkbox" id="filter-title" checked> Title</label>
-        <label class="ml-3"><input type="checkbox" id="filter-description" checked> Description</label>
-        <label class="ml-3"><input type="checkbox" id="filter-tags" checked> Tags</label>
-    </div>
-</div>
-
 
     <!-- Tours Section -->
     <section id="tours" class="container my-5">
         <h2 class="my-4">Available Tours</h2>
         <div class="row" id="tour-list">
             {% for tour in tours[:6] %}
-            <div class="col-md-4 mb-4 filter-item" data-name="{{ tour.name }}" data-description="{{ tour.description }}">
+            <div class="col-md-4 mb-4 filter-item"
+                 data-name="{{ tour.name }}"
+                 data-description="{{ tour.description }}"
+                 data-tags="{% for tag in tour.tags %}{{ tag.name }} {% endfor %}">
                 <div class="card h-100">
                     <img src="{{ tour.images[0].url if tour.images else '/static/images/transport1.png' }}"
                          class="card-img-top"
-                         alt="{{ tour.name }}"
-                         data-tags="{% for tag in tour.tags %}{{ tag.name }} {% endfor %}">
+                         alt="{{ tour.name }}">
 
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ tour.name }}</h5>
@@ -114,9 +112,14 @@
         <h2 class="my-4">Available Transports</h2>
         <div class="row" id="transport-list">
             {% for transport in transports[:6] %}
-            <div class="col-md-4 mb-4 filter-item" data-name="{{ transport.name }}" data-description="{{ transport.description }}">
+            <div class="col-md-4 mb-4 filter-item"
+                 data-name="{{ transport.name }}"
+                 data-description="{{ transport.description }}"
+                 data-tags="{% for tag in transport.tags %}{{ tag.name }} {% endfor %}">
                 <div class="card h-100">
-                    <img src="{{ transport.images[0].url if transport.images else '/static/images/placeholder.jpg' }}" class="card-img-top" alt="{{ transport.name }}">
+                    <img src="{{ transport.images[0].url if transport.images else '/static/images/placeholder.jpg' }}"
+                         class="card-img-top"
+                         alt="{{ transport.name }}">
 
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ transport.name }}</h5>
@@ -152,40 +155,45 @@
 
     <!-- Search Functionality Script -->
     <script>
-    document.getElementById("search-button").addEventListener("click", function() {
-    const query = document.getElementById("search-bar").value.toLowerCase();
-    const searchTitle = document.getElementById("filter-title").checked;
-    const searchDescription = document.getElementById("filter-description").checked;
-    const searchTags = document.getElementById("filter-tags").checked;
+        function searchFunction() {
+            const query = document.getElementById("search-bar").value.toLowerCase();
+            const searchTitle = document.getElementById("filter-title").checked;
+            const searchDescription = document.getElementById("filter-description").checked;
+            const searchTags = document.getElementById("filter-tags").checked;
 
-    document.querySelectorAll(".filter-item").forEach(item => {
-        let match = false;
+            document.querySelectorAll(".filter-item").forEach(item => {
+                let match = false;
 
-        if (searchTitle) {
-            const name = item.getAttribute("data-name").toLowerCase();
-            if (name.includes(query)) {
-                match = true;
-            }
+                if (searchTitle) {
+                    const name = item.getAttribute("data-name").toLowerCase();
+                    if (name.includes(query)) {
+                        match = true;
+                    }
+                }
+
+                if (!match && searchDescription) {
+                    const description = item.getAttribute("data-description").toLowerCase();
+                    if (description.includes(query)) {
+                        match = true;
+                    }
+                }
+
+                if (!match && searchTags) {
+                    const tags = item.getAttribute("data-tags").toLowerCase();
+                    if (tags.includes(query)) {
+                        match = true;
+                    }
+                }
+
+                item.style.display = match ? "" : "none";
+            });
         }
 
-        if (!match && searchDescription) {
-            const description = item.getAttribute("data-description").toLowerCase();
-            if (description.includes(query)) {
-                match = true;
-            }
-        }
-
-        if (!match && searchTags) {
-            const tags = item.getAttribute("data-tags").toLowerCase();
-            if (tags.includes(query)) {
-                match = true;
-            }
-        }
-
-        item.style.display = match ? "" : "none";
-        });
-    });
-
+        // Attach event listeners for live search
+        document.getElementById("search-bar").addEventListener("input", searchFunction);
+        document.getElementById("filter-title").addEventListener("change", searchFunction);
+        document.getElementById("filter-description").addEventListener("change", searchFunction);
+        document.getElementById("filter-tags").addEventListener("change", searchFunction);
     </script>
 </body>
 </html>
