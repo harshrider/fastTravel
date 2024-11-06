@@ -10,6 +10,9 @@
             object-fit: cover;
             background-color: black;
         }
+        .extra-item {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -33,7 +36,7 @@
                         <span class="navbar-text mr-3">Welcome, {{ user.username }}</span>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/cart">Cart</a></li> <!-- Added Cart Link -->
+                    <li class="nav-item"><a class="nav-link" href="/cart">Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
                     {% if user.role.value == 'A' %}
                         <li class="nav-item"><a class="nav-link" href="/admin">Admin Dashboard</a></li>
@@ -54,7 +57,7 @@
         </div>
     </header>
 
-     <!-- Search Bar with Filters -->
+    <!-- Search Bar with Filters -->
     <div class="container my-4">
         <div class="input-group">
             <input type="text" id="search-bar" class="form-control" placeholder="Search Tours and Transports...">
@@ -70,12 +73,25 @@
     <section id="tours" class="container my-5">
         <h2 class="my-4">Available Tours</h2>
         <div class="row" id="tour-list">
-            {% for tour in tours[:6] %}
-            <div class="col-md-4 mb-4 filter-item"
+            {% for tour in tours %}
+            {% set extra_class = '' %}
+            {% if loop.index0 >= 6 %}
+                {% set extra_class = 'extra-item' %}
+            {% endif %}
+            {% set card_class = '' %}
+            {% set tag_names = [tag.name for tag in tour.tags] %}
+            {% if 'Gold' in tag_names %}
+                {% set card_class = 'bg-warning' %}
+            {% elif 'Silver' in tag_names %}
+                {% set card_class = 'bg-secondary' %}
+            {% elif 'Bronze' in tag_names %}
+                {% set card_class = 'bg-danger' %}
+            {% endif %}
+            <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
                  data-name="{{ tour.name }}"
                  data-description="{{ tour.description }}"
                  data-tags="{% for tag in tour.tags %}{{ tag.name }} {% endfor %}">
-                <div class="card h-100">
+                <div class="card h-100 {{ card_class }}">
                     <img src="{{ tour.images[0].url if tour.images else '/static/images/transport1.png' }}"
                          class="card-img-top"
                          alt="{{ tour.name }}">
@@ -102,7 +118,7 @@
         </div>
         {% if tours|length > 6 %}
             <div class="text-center mt-4">
-                <a href="/tours/page/2" class="btn btn-secondary">See More Tours</a>
+                <button id="loadMoreTours" class="btn btn-secondary">See More Tours</button>
             </div>
         {% endif %}
     </section>
@@ -111,12 +127,25 @@
     <section id="transports" class="container my-5">
         <h2 class="my-4">Available Transports</h2>
         <div class="row" id="transport-list">
-            {% for transport in transports[:6] %}
-            <div class="col-md-4 mb-4 filter-item"
+            {% for transport in transports %}
+            {% set extra_class = '' %}
+            {% if loop.index0 >= 6 %}
+                {% set extra_class = 'extra-item' %}
+            {% endif %}
+            {% set card_class = '' %}
+            {% set tag_names = [tag.name for tag in transport.tags] %}
+            {% if 'Gold' in tag_names %}
+                {% set card_class = 'bg-warning' %}
+            {% elif 'Silver' in tag_names %}
+                {% set card_class = 'bg-secondary' %}
+            {% elif 'Bronze' in tag_names %}
+                {% set card_class = 'bg-danger' %}
+            {% endif %}
+            <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
                  data-name="{{ transport.name }}"
                  data-description="{{ transport.description }}"
                  data-tags="{% for tag in transport.tags %}{{ tag.name }} {% endfor %}">
-                <div class="card h-100">
+                <div class="card h-100 {{ card_class }}">
                     <img src="{{ transport.images[0].url if transport.images else '/static/images/placeholder.jpg' }}"
                          class="card-img-top"
                          alt="{{ transport.name }}">
@@ -143,14 +172,14 @@
         </div>
         {% if transports|length > 6 %}
             <div class="text-center mt-4">
-                <a href="/transports/page/2" class="btn btn-secondary">See More Transports</a>
+                <button id="loadMoreTransports" class="btn btn-secondary">See More Transports</button>
             </div>
         {% endif %}
     </section>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <!-- Ensure to include this script after jQuery -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <!-- Search Functionality Script -->
@@ -194,6 +223,22 @@
         document.getElementById("filter-title").addEventListener("change", searchFunction);
         document.getElementById("filter-description").addEventListener("change", searchFunction);
         document.getElementById("filter-tags").addEventListener("change", searchFunction);
+
+        // Load More Tours
+        document.getElementById("loadMoreTours").addEventListener("click", function() {
+            document.querySelectorAll("#tour-list .extra-item").forEach(item => {
+                item.classList.remove("extra-item");
+            });
+            this.style.display = 'none';
+        });
+
+        // Load More Transports
+        document.getElementById("loadMoreTransports").addEventListener("click", function() {
+            document.querySelectorAll("#transport-list .extra-item").forEach(item => {
+                item.classList.remove("extra-item");
+            });
+            this.style.display = 'none';
+        });
     </script>
 </body>
 </html>
