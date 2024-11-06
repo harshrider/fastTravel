@@ -66,7 +66,8 @@
             {% for tour in tours[:6] %}
             <div class="col-md-4 mb-4 filter-item" data-name="{{ tour.name }}" data-description="{{ tour.description }}">
                 <div class="card h-100">
-                    <img src="{{ tour.image_url or '/static/images/placeholder.jpg' }}" class="card-img-top" alt="{{ tour.name }}">
+                    <!-- Updated Image Display -->
+                    <img src="{{ tour.images[0].url if tour.images else '/static/images/placeholder.jpg' }}" class="card-img-top" alt="{{ tour.name }}">
 
                     <div class="card-body">
                         <h5 class="card-title">{{ tour.name }}</h5>
@@ -106,11 +107,12 @@
     <!-- Transports Section with Pagination -->
     <section id="transports" class="container my-5">
         <h2 class="my-4">Available Transports</h2>
-        <div class="row" id="transport-list">
+         <div class="row" id="transport-list">
             {% for transport in transports[:6] %}
             <div class="col-md-4 mb-4 filter-item" data-name="{{ transport.name }}" data-description="{{ transport.description }}">
                 <div class="card h-100">
-                    <img src="{{ transport.image_url or '/static/images/placeholder.jpg' }}" class="card-img-top" alt="{{ transport.name }}">
+                    <!-- Updated Image Display -->
+                    <img src="{{ transport.images[0].url if transport.images else '/static/images/placeholder.jpg' }}" class="card-img-top" alt="{{ transport.name }}">
 
                     <div class="card-body">
                         <h5 class="card-title">{{ transport.name }}</h5>
