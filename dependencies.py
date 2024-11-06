@@ -40,7 +40,7 @@ def admin_required(current_user: Optional[User] = Depends(get_current_user)):
     if not current_user:
         logger.warning("Access attempt with no authentication.")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    if current_user.role != UserRoleEnum.A or current_user.role != UserRoleEnum.S :
+    if current_user.role != UserRoleEnum.S:
         logger.warning(f"Access denied for user '{current_user.username}' with role '{current_user.role.value}' attempting to access admin resources.")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not authorized. Current role: {current_user.role.value}")
     return current_user

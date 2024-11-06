@@ -1,13 +1,13 @@
+# models.py
+
 from enum import Enum as PyEnum
 from sqlalchemy import (
     Column, Integer, String, Float, ForeignKey, Table,
     Enum as SQLAlchemyEnum, Date, Time, Boolean, DateTime
 )
 from sqlalchemy.orm import relationship
-
-from database import Base
-# Utility functions
 from datetime import datetime, timedelta
+from database import Base
 
 # Association tables for many-to-many relationships
 tour_tag_association = Table(
@@ -50,12 +50,12 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.S, nullable=False)
-    credit = Column(Float, default=0.0, nullable=False)  # New field for user's credit
+    role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.C, nullable=False)
+    credit = Column(Float, default=0.0, nullable=False)
 
     # Relationships
     carts = relationship("Cart", back_populates="user")
-    bookings = relationship("Booking", back_populates="user")  # New relationship
+    bookings = relationship("Booking", back_populates="user")
 
 class Tag(Base):
     __tablename__ = "tags"
@@ -89,7 +89,6 @@ class Tour(Base):
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
     max_tickets = Column(Integer, nullable=False)
-    image_url = Column(String, nullable=True)
     location_url = Column(String, nullable=True)
 
     # Relationships
@@ -109,7 +108,6 @@ class Transport(Base):
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
     max_seats = Column(Integer, nullable=False)
-    image_url = Column(String, nullable=True)
     location_url = Column(String, nullable=True)
 
     # Relationships
@@ -117,14 +115,13 @@ class Transport(Base):
     images = relationship("Image", primaryjoin="Transport.id == Image.transport_id", back_populates="transport")
     availabilities = relationship("TransportAvailability", back_populates="transport", cascade="all, delete-orphan")
 
-
 class TourAvailability(Base):
     __tablename__ = "tour_availabilities"
 
     id = Column(Integer, primary_key=True, index=True)
     tour_id = Column(Integer, ForeignKey("tours.id"), nullable=False)
     date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)  # Field for time slots
+    time = Column(Time, nullable=False)
     available_tickets = Column(Integer, nullable=False)
     is_available = Column(Boolean, default=True)
 
@@ -137,7 +134,7 @@ class TransportAvailability(Base):
     id = Column(Integer, primary_key=True, index=True)
     transport_id = Column(Integer, ForeignKey("transports.id"), nullable=False)
     date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)  # Field for time slots
+    time = Column(Time, nullable=False)
     available_seats = Column(Integer, nullable=False)
     is_available = Column(Boolean, default=True)
 
@@ -161,8 +158,8 @@ class CartItem(Base):
     cart_id = Column(Integer, ForeignKey("carts.id"), nullable=False)
     tour_id = Column(Integer, ForeignKey("tours.id"), nullable=True)
     transport_id = Column(Integer, ForeignKey("transports.id"), nullable=True)
-    date = Column(Date, nullable=False)  # New field for booking date
-    time = Column(Time, nullable=False)  # New field for booking time
+    date = Column(Date, nullable=False)
+    time = Column(Time, nullable=False)
     quantity = Column(Integer, default=1, nullable=False)
 
     # Relationships
@@ -204,7 +201,7 @@ class Package(Base):
     images = relationship("Image", back_populates="package")
     creator = relationship("User")
 
-
+# Utility functions
 def generate_time_slots(start_time, end_time, interval_minutes=60):
     slots = []
     current_time = datetime.combine(datetime.today(), start_time)

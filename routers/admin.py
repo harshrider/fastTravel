@@ -4,7 +4,6 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from dependencies import admin_required, get_db
 from models import *
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 import os
 from uuid import uuid4
@@ -18,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 @router.get("/admin", response_class=HTMLResponse)
 def admin_dashboard(request: Request, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
-    logger.info(f"Admin '{current_user.username}' is accessing the dashboard.")
     try:
         tours = db.query(Tour).all()
         transports = db.query(Transport).all()
@@ -50,15 +48,22 @@ async def create_tour(
     start_time_obj = datetime.strptime(start_time, "%H:%M").time()
     end_time_obj = datetime.strptime(end_time, "%H:%M").time()
 
+    # Handle tags
     tag_names = {tag.strip().upper() for tag in tags.split(',') if tag.strip()}
     tag_objects = []
-    for name in tag_names:
-        tag = db.query(Tag).filter_by(name=name).first()
-        if not tag:
-            tag = Tag(name=name)
-        tag_objects.append(tag)
+    for tag_name in tag_names:
+        existing_tag = db.query(Tag).filter_by(name=tag_name).first()
+        if not existing_tag:
+            new_tag = Tag(name=tag_name)
+            db.add(new_tag)
+            db.commit()
+            db.refresh(new_tag)
+            tag_objects.append(new_tag)
+        else:
+            tag_objects.append(existing_tag)
 
-    image_urls = []
+    # Handle images
+    image_objects = []
     if images:
         for image in images:
             file_extension = os.path.splitext(image.filename)[1]
@@ -68,7 +73,7 @@ async def create_tour(
             file_path = os.path.join(upload_directory, unique_filename)
             with open(file_path, "wb") as buffer:
                 buffer.write(await image.read())
-            image_urls.append(Image(url=f"/static/uploads/{unique_filename}"))
+            image_objects.append(Image(url=f"/static/uploads/{unique_filename}"))
 
     new_tour = Tour(
         name=name,
@@ -81,15 +86,13 @@ async def create_tour(
         max_tickets=max_tickets,
         location_url=location_url,
         tags=tag_objects,
-        images=image_urls
+        images=image_objects
     )
     db.add(new_tour)
     db.commit()
     db.refresh(new_tour)
 
-    # Generate availability automatically
     create_tour_availability(new_tour, start_date, end_date, db)
-
     logger.info(f"Tour '{name}' created successfully with ID {new_tour.id}")
     return RedirectResponse(url="/admin", status_code=303)
 
@@ -116,13 +119,18 @@ async def create_transport(
 
     tag_names = {tag.strip().upper() for tag in tags.split(',') if tag.strip()}
     tag_objects = []
-    for name in tag_names:
-        tag = db.query(Tag).filter_by(name=name).first()
-        if not tag:
-            tag = Tag(name=name)
-        tag_objects.append(tag)
+    for tag_name in tag_names:
+        existing_tag = db.query(Tag).filter_by(name=tag_name).first()
+        if not existing_tag:
+            new_tag = Tag(name=tag_name)
+            db.add(new_tag)
+            db.commit()
+            db.refresh(new_tag)
+            tag_objects.append(new_tag)
+        else:
+            tag_objects.append(existing_tag)
 
-    image_urls = []
+    image_objects = []
     if images:
         for image in images:
             file_extension = os.path.splitext(image.filename)[1]
@@ -132,7 +140,7 @@ async def create_transport(
             file_path = os.path.join(upload_directory, unique_filename)
             with open(file_path, "wb") as buffer:
                 buffer.write(await image.read())
-            image_urls.append(Image(url=f"/static/uploads/{unique_filename}"))
+            image_objects.append(Image(url=f"/static/uploads/{unique_filename}"))
 
     new_transport = Transport(
         name=name,
@@ -145,61 +153,45 @@ async def create_transport(
         max_seats=max_seats,
         location_url=location_url,
         tags=tag_objects,
-        images=image_urls
+        images=image_objects
     )
     db.add(new_transport)
     db.commit()
     db.refresh(new_transport)
 
-    # Generate availability automatically
     create_transport_availability(new_transport, start_date, end_date, db)
-
     logger.info(f"Transport '{name}' created successfully with ID {new_transport.id}")
     return RedirectResponse(url="/admin", status_code=303)
 
 @router.post("/admin/delete_tour/{tour_id}")
 def delete_tour(tour_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
-    logger.info(f"Admin '{current_user.username}' is deleting tour with ID {tour_id}")
-    try:
-        tour = db.query(Tour).filter(Tour.id == tour_id).first()
-        if not tour:
-            logger.warning(f"Tour with ID {tour_id} not found.")
-            raise HTTPException(status_code=404, detail="Tour not found")
-        if tour.images:
-            for image in tour.images:
-                image_path = os.path.join("static", image.url.lstrip("/"))
-                if os.path.exists(image_path):
-                    os.remove(image_path)
-                    logger.info(f"Deleted image file for tour ID {tour_id}: {image_path}")
-        db.delete(tour)
-        db.commit()
-        logger.info(f"Tour with ID {tour_id} deleted successfully.")
-        return RedirectResponse(url="/admin", status_code=303)
-    except Exception as e:
-        logger.error(f"Error deleting tour ID {tour_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete tour")
+    tour = db.query(Tour).filter(Tour.id == tour_id).first()
+    if not tour:
+        raise HTTPException(status_code=404, detail="Tour not found")
+    if tour.images:
+        for image in tour.images:
+            image_path = os.path.join("static", image.url.lstrip("/"))
+            if os.path.exists(image_path):
+                os.remove(image_path)
+    db.delete(tour)
+    db.commit()
+    logger.info(f"Tour with ID {tour_id} deleted successfully.")
+    return RedirectResponse(url="/admin", status_code=303)
 
 @router.post("/admin/delete_transport/{transport_id}")
 def delete_transport(transport_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
-    logger.info(f"Admin '{current_user.username}' is deleting transport with ID {transport_id}")
-    try:
-        transport = db.query(Transport).filter(Transport.id == transport_id).first()
-        if not transport:
-            logger.warning(f"Transport with ID {transport_id} not found.")
-            raise HTTPException(status_code=404, detail="Transport not found")
-        if transport.images:
-            for image in transport.images:
-                image_path = os.path.join("static", image.url.lstrip("/"))
-                if os.path.exists(image_path):
-                    os.remove(image_path)
-                    logger.info(f"Deleted image file for transport ID {transport_id}: {image_path}")
-        db.delete(transport)
-        db.commit()
-        logger.info(f"Transport with ID {transport_id} deleted successfully.")
-        return RedirectResponse(url="/admin", status_code=303)
-    except Exception as e:
-        logger.error(f"Error deleting transport ID {transport_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to delete transport")
+    transport = db.query(Transport).filter(Transport.id == transport_id).first()
+    if not transport:
+        raise HTTPException(status_code=404, detail="Transport not found")
+    if transport.images:
+        for image in transport.images:
+            image_path = os.path.join("static", image.url.lstrip("/"))
+            if os.path.exists(image_path):
+                os.remove(image_path)
+    db.delete(transport)
+    db.commit()
+    logger.info(f"Transport with ID {transport_id} deleted successfully.")
+    return RedirectResponse(url="/admin", status_code=303)
 
 @router.get("/admin/edit_tour/{tour_id}", response_class=HTMLResponse)
 def edit_tour_form(tour_id: int, request: Request, db: Session = Depends(get_db),
@@ -232,7 +224,6 @@ async def edit_tour(
     if not tour:
         raise HTTPException(status_code=404, detail="Tour not found")
 
-    # Update tour fields
     tour.name = name
     tour.description = description
     tour.price_A = price_A
@@ -243,19 +234,21 @@ async def edit_tour(
     tour.max_tickets = max_tickets
     tour.location_url = location_url
 
-    # Update tags
     tag_names = {tag.strip().upper() for tag in tags.split(',') if tag.strip()}
     tag_objects = []
-    for name in tag_names:
-        tag = db.query(Tag).filter_by(name=name).first()
-        if not tag:
-            tag = Tag(name=name)
-        tag_objects.append(tag)
+    for tag_name in tag_names:
+        existing_tag = db.query(Tag).filter_by(name=tag_name).first()
+        if not existing_tag:
+            new_tag = Tag(name=tag_name)
+            db.add(new_tag)
+            db.commit()
+            db.refresh(new_tag)
+            tag_objects.append(new_tag)
+        else:
+            tag_objects.append(existing_tag)
     tour.tags = tag_objects
 
-    # Update images if new images are uploaded
     if images:
-        # Delete old images
         if tour.images:
             for image in tour.images:
                 image_path = os.path.join("static", image.url.lstrip("/"))
@@ -276,20 +269,20 @@ async def edit_tour(
 
     db.commit()
 
-    # Update availability if dates are provided
     if start_date and end_date:
-        # Delete existing availabilities in the date range
         db.query(TourAvailability).filter(
             TourAvailability.tour_id == tour_id,
             TourAvailability.date >= start_date,
             TourAvailability.date <= end_date
         ).delete()
         db.commit()
-        # Generate new availability
         create_tour_availability(tour, start_date, end_date, db)
 
     logger.info(f"Tour '{name}' updated successfully with ID {tour.id}")
     return RedirectResponse(url="/admin", status_code=303)
+
+# Similar routes for editing transports, managing tour and transport availability...
+# Include transport edit routes and availability management functions as seen for tours above.
 
 # Similar routes for editing transports
 @router.get("/admin/edit_transport/{transport_id}", response_class=HTMLResponse)
@@ -334,15 +327,16 @@ async def edit_transport(
     transport.max_seats = max_seats
     transport.location_url = location_url
 
-    # Update tags
+    # Process tags from the input, ensuring they are unique and uppercase
     tag_names = {tag.strip().upper() for tag in tags.split(',') if tag.strip()}
     tag_objects = []
-    for name in tag_names:
-        tag = db.query(Tag).filter_by(name=name).first()
+    for tag_name in tag_names:  # 'tag_name' now used consistently in the loop
+        # Query for existing tags by the tag_name
+        tag = db.query(Tag).filter_by(name=tag_name).first()
         if not tag:
-            tag = Tag(name=name)
-        tag_objects.append(tag)
-    transport.tags = tag_objects
+            # Create a new Tag object if it doesn't already exist
+            tag = Tag(name=tag_name)
+        tag_objects.append(tag)  # Add the tag object to the list
 
     # Update images if new images are uploaded
     if images:

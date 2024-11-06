@@ -10,16 +10,13 @@
             object-fit: cover;
             background-color: black;
         }
-        .extra-item {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="/">The Expedition Thailand</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -74,31 +71,45 @@
         <h2 class="my-4">Available Tours</h2>
         <div class="row" id="tour-list">
             {% for tour in tours %}
-                {% set extra_class = '' %}
-                {% if loop.index0 >= 6 %}
-                    {% set extra_class = 'extra-item' %}
-                {% endif %}
+                {% set extra_class = 'extra-item' if loop.index0 >= 6 else '' %}
+
+                {# Determine the card class based on tags #}
                 {% set card_class = '' %}
-                {% for tag in tour.tags %}
-                    {% if tag.name == 'Gold' %}
-                        {% set card_class = 'bg-warning' %}
+                {% if 'GOLD' in tour.tags|map(attribute='name') %}
+                    {% set card_class = 'bg-warning' %}
+                {% elif 'SILVER' in tour.tags|map(attribute='name') %}
+                    {% set card_class = 'bg-secondary' %}
+                {% elif 'BRONZE' in tour.tags|map(attribute='name') %}
+                    {% set card_class = 'bg-danger' %}
+                {% endif %}
 
-                    {% elif tag.name == 'Silver' %}
-                        {% set card_class = 'bg-secondary' %}
-
-                    {% elif tag.name == 'Bronze' %}
-                        {% set card_class = 'bg-danger' %}
-
-                    {% endif %}
-                {% endfor %}
                 <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
                      data-name="{{ tour.name }}"
                      data-description="{{ tour.description }}"
                      data-tags="{% for tag in tour.tags %}{{ tag.name }} {% endfor %}">
                     <div class="card h-100 {{ card_class }}">
-                        <img src="{{ tour.images[0].url if tour.images else '/static/images/transport1.png' }}"
-                             class="card-img-top"
-                             alt="{{ tour.name }}">
+                        <!-- Image Carousel -->
+                        {% if tour.images and tour.images|length > 0 %}
+                            <div id="carouselTour{{ tour.id }}" class="carousel slide" data-ride="carousel">
+                                <div class="carousel-inner">
+                                    {% for image in tour.images %}
+                                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                            <img src="{{ image.url }}" class="d-block w-100 card-img-top" alt="{{ tour.name }}">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <a class="carousel-control-prev" href="#carouselTour{{ tour.id }}" role="button" data-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Previous</span>
+                                </a>
+                                <a class="carousel-control-next" href="#carouselTour{{ tour.id }}" role="button" data-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Next</span>
+                                </a>
+                            </div>
+                        {% else %}
+                            <img src="/static/images/placeholder.jpg" class="card-img-top" alt="{{ tour.name }}">
+                        {% endif %}
 
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">{{ tour.name }}</h5>
@@ -133,28 +144,45 @@
         <h2 class="my-4">Available Transports</h2>
         <div class="row" id="transport-list">
             {% for transport in transports %}
-                {% set extra_class = '' %}
-                {% if loop.index0 >= 6 %}
-                    {% set extra_class = 'extra-item' %}
-                {% endif %}
+                {% set style = 'style="display:none;"' if loop.index0 >= 6 else '' %}
+
+                {# Determine the card class based on tags #}
                 {% set card_class = '' %}
-                {% for tag in transport.tags %}
-                    {% if tag.name == 'Gold' %}
-                        {% set card_class = 'bg-warning' %}
-                    {% elif tag.name == 'Silver' %}
-                        {% set card_class = 'bg-secondary' %}
-                    {% elif tag.name == 'Bronze' %}
-                        {% set card_class = 'bg-danger' %}
-                    {% endif %}
-                {% endfor %}
-                <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
+                {% if 'GOLD' in transport.tags|map(attribute='name') %}
+                    {% set card_class = 'bg-warning' %}
+                {% elif 'SILVER' in transport.tags|map(attribute='name') %}
+                    {% set card_class = 'bg-secondary' %}
+                {% elif 'BRONZE' in transport.tags|map(attribute='name') %}
+                    {% set card_class = 'bg-danger' %}
+                {% endif %}
+
+                <div class="col-md-4 mb-4 filter-item" {{ style }}
                      data-name="{{ transport.name }}"
                      data-description="{{ transport.description }}"
                      data-tags="{% for tag in transport.tags %}{{ tag.name }} {% endfor %}">
                     <div class="card h-100 {{ card_class }}">
-                        <img src="{{ transport.images[0].url if transport.images else '/static/images/placeholder.jpg' }}"
-                             class="card-img-top"
-                             alt="{{ transport.name }}">
+                        <!-- Image Carousel -->
+                        {% if transport.images and transport.images|length > 0 %}
+                            <div id="carouselTransport{{ transport.id }}" class="carousel slide" data-ride="carousel">
+                                <div class="carousel-inner">
+                                    {% for image in transport.images %}
+                                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                            <img src="{{ image.url }}" class="d-block w-100 card-img-top" alt="{{ transport.name }}">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                <a class="carousel-control-prev" href="#carouselTransport{{ transport.id }}" role="button" data-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Previous</span>
+                                </a>
+                                <a class="carousel-control-next" href="#carouselTransport{{ transport.id }}" role="button" data-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="sr-only">Next</span>
+                                </a>
+                            </div>
+                        {% else %}
+                            <img src="/static/images/placeholder.jpg" class="card-img-top" alt="{{ transport.name }}">
+                        {% endif %}
 
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">{{ transport.name }}</h5>
@@ -186,7 +214,7 @@
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <!-- Ensure to include this script after jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <!-- Search Functionality Script -->
@@ -233,16 +261,16 @@
 
         // Load More Tours
         document.getElementById("loadMoreTours").addEventListener("click", function() {
-            document.querySelectorAll("#tour-list .extra-item").forEach(item => {
-                item.classList.remove("extra-item");
+            document.querySelectorAll("#tour-list .filter-item[style]").forEach(item => {
+                item.style.display = '';
             });
             this.style.display = 'none';
         });
 
         // Load More Transports
         document.getElementById("loadMoreTransports").addEventListener("click", function() {
-            document.querySelectorAll("#transport-list .extra-item").forEach(item => {
-                item.classList.remove("extra-item");
+            document.querySelectorAll("#transport-list .filter-item[style]").forEach(item => {
+                item.style.display = '';
             });
             this.style.display = 'none';
         });

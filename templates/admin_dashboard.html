@@ -44,16 +44,19 @@
         <!-- Section: Create New Tour -->
         <h2 class="mt-4">Create New Tour</h2>
         <form action="/admin/create_tour" method="post" enctype="multipart/form-data">
+            <!-- Tour Name -->
             <div class="form-group">
                 <label for="name">Tour Name</label>
                 <input type="text" id="name" class="form-control" name="name" required>
             </div>
+            <!-- Description -->
             <div class="form-group">
                 <label for="description">Description</label>
                 <textarea id="description" class="form-control" name="description" rows="3" required></textarea>
             </div>
+            <!-- Prices -->
             <div class="form-group">
-                <label for="price_A">Price for Admin (A)</label>
+                <label for="price_A">Price for AStar Customer (A)</label>
                 <input type="number" id="price_A" step="0.01" class="form-control" name="price_A" required>
             </div>
             <div class="form-group">
@@ -64,6 +67,7 @@
                 <label for="price_C">Price for Customer (C)</label>
                 <input type="number" id="price_C" step="0.01" class="form-control" name="price_C" required>
             </div>
+            <!-- Times -->
             <div class="form-group">
                 <label for="start_time">Start Time</label>
                 <input type="time" id="start_time" class="form-control" name="start_time" required>
@@ -72,20 +76,39 @@
                 <label for="end_time">End Time</label>
                 <input type="time" id="end_time" class="form-control" name="end_time" required>
             </div>
+            <!-- Max Tickets -->
             <div class="form-group">
                 <label for="max_tickets">Max Tickets per Day</label>
                 <input type="number" id="max_tickets" class="form-control" name="max_tickets" required>
             </div>
+            <!-- Location URL -->
+            <div class="form-group">
+                <label for="location_url">Location URL</label>
+                <input type="text" id="location_url" class="form-control" name="location_url">
+            </div>
+            <!-- Start Date and End Date -->
+            <div class="form-group">
+                <label for="start_date">Availability Start Date</label>
+                <input type="date" id="start_date" class="form-control" name="start_date" required>
+            </div>
+            <div class="form-group">
+                <label for="end_date">Availability End Date</label>
+                <input type="date" id="end_date" class="form-control" name="end_date" required>
+            </div>
+            <!-- Tags -->
             <div class="form-group">
                 <label for="tags">Tags (comma-separated)</label>
-                <input type="text" id="tags" class="form-control" name="tags" placeholder="e.g., Gold, Adventure">
+                <input type="text" id="tags" class="form-control" name="tags" placeholder="e.g., GOLD, Adventure">
             </div>
+            <!-- Images -->
             <div class="form-group">
                 <label for="images">Upload Images</label>
                 <input type="file" id="images" class="form-control-file" name="images" accept="image/*" multiple>
             </div>
             <button type="submit" class="btn btn-primary">Create Tour</button>
         </form>
+
+        <!-- Section: Existing Tours -->
 
         <!-- Section: Existing Tours -->
         <h2 class="mt-5">Existing Tours</h2>
@@ -136,19 +159,23 @@
             </tbody>
         </table>
 
-                <!-- Section: Create New Transport -->
+
+        <!-- Section: Create New Transport -->
         <h2 class="mt-5">Create New Transport</h2>
         <form action="/admin/create_transport" method="post" enctype="multipart/form-data">
+            <!-- Transport Name -->
             <div class="form-group">
                 <label for="transport_name">Transport Name</label>
                 <input type="text" id="transport_name" class="form-control" name="name" required>
             </div>
+            <!-- Description -->
             <div class="form-group">
                 <label for="transport_description">Description</label>
                 <textarea id="transport_description" class="form-control" name="description" rows="3" required></textarea>
             </div>
+            <!-- Prices -->
             <div class="form-group">
-                <label for="transport_price_A">Price for Admin (A)</label>
+                <label for="transport_price_A">Price for AStar Customer (A)</label>
                 <input type="number" id="transport_price_A" step="0.01" class="form-control" name="price_A" required>
             </div>
             <div class="form-group">
@@ -159,6 +186,7 @@
                 <label for="transport_price_C">Price for Customer (C)</label>
                 <input type="number" id="transport_price_C" step="0.01" class="form-control" name="price_C" required>
             </div>
+            <!-- Times -->
             <div class="form-group">
                 <label for="transport_start_time">Start Time</label>
                 <input type="time" id="transport_start_time" class="form-control" name="start_time" required>
@@ -167,20 +195,39 @@
                 <label for="transport_end_time">End Time</label>
                 <input type="time" id="transport_end_time" class="form-control" name="end_time" required>
             </div>
+            <!-- Max Seats -->
             <div class="form-group">
                 <label for="max_seats">Max Seats per Day</label>
                 <input type="number" id="max_seats" class="form-control" name="max_seats" required>
             </div>
+            <!-- Location URL -->
+            <div class="form-group">
+                <label for="transport_location_url">Location URL</label>
+                <input type="text" id="transport_location_url" class="form-control" name="location_url">
+            </div>
+            <!-- Start Date and End Date -->
+            <div class="form-group">
+                <label for="transport_start_date">Availability Start Date</label>
+                <input type="date" id="transport_start_date" class="form-control" name="start_date" required>
+            </div>
+            <div class="form-group">
+                <label for="transport_end_date">Availability End Date</label>
+                <input type="date" id="transport_end_date" class="form-control" name="end_date" required>
+            </div>
+            <!-- Tags -->
             <div class="form-group">
                 <label for="transport_tags">Tags (comma-separated)</label>
-                <input type="text" id="transport_tags" class="form-control" name="tags" placeholder="e.g., Gold, Adventure">
+                <input type="text" id="transport_tags" class="form-control" name="tags" placeholder="e.g., GOLD, Adventure">
             </div>
+            <!-- Images -->
             <div class="form-group">
                 <label for="transport_images">Upload Images</label>
                 <input type="file" id="transport_images" class="form-control-file" name="images" accept="image/*" multiple>
             </div>
             <button type="submit" class="btn btn-primary">Create Transport</button>
         </form>
+
+
     </div>
 
         <!-- Section: Existing Transports -->
