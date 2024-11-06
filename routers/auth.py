@@ -94,7 +94,7 @@ def post_signup(
         username=username,
         email=email,
         password_hash=hashed_password,
-        role=role,  # Set to role parameter, which defaults to 'S' (Superuser)
+        role=UserRoleEnum.S,  # Set to role parameter, which defaults to 'S' (Superuser)
         credit=credit
     )
     db.add(new_user)

@@ -4,9 +4,10 @@ from sqlalchemy import (
     Enum as SQLAlchemyEnum, Date, Time, Boolean, DateTime
 )
 from sqlalchemy.orm import relationship
-from datetime import datetime
 
 from database import Base
+# Utility functions
+from datetime import datetime, timedelta
 
 # Association tables for many-to-many relationships
 tour_tag_association = Table(
@@ -19,6 +20,19 @@ transport_tag_association = Table(
     "transport_tag_association", Base.metadata,
     Column("transport_id", Integer, ForeignKey("transports.id"), primary_key=True),
     Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True)
+)
+
+# Association tables for many-to-many relationships between packages and tours/transports
+package_tour_association = Table(
+    "package_tour_association", Base.metadata,
+    Column("package_id", Integer, ForeignKey("packages.id"), primary_key=True),
+    Column("tour_id", Integer, ForeignKey("tours.id"), primary_key=True)
+)
+
+package_transport_association = Table(
+    "package_transport_association", Base.metadata,
+    Column("package_id", Integer, ForeignKey("packages.id"), primary_key=True),
+    Column("transport_id", Integer, ForeignKey("transports.id"), primary_key=True)
 )
 
 class UserRoleEnum(PyEnum):
@@ -56,6 +70,12 @@ class Image(Base):
     url = Column(String, nullable=False)
     tour_id = Column(Integer, ForeignKey("tours.id"), nullable=True)
     transport_id = Column(Integer, ForeignKey("transports.id"), nullable=True)
+    package_id = Column(Integer, ForeignKey("packages.id"), nullable=True)
+
+    # Relationships
+    tour = relationship("Tour", back_populates="images")
+    transport = relationship("Transport", back_populates="images")
+    package = relationship("Package", back_populates="images")
 
 class Tour(Base):
     __tablename__ = "tours"
@@ -71,10 +91,11 @@ class Tour(Base):
     max_tickets = Column(Integer, nullable=False)  # Max tickets per day
     image_url = Column(String, nullable=True)  # Legacy field if needed
     location_url = Column(String, nullable=True)  # New field for location as a URL
+    images = relationship("Image", primaryjoin="Tour.id == Image.tour_id", back_populates="tour")
 
     # Relationships
     tags = relationship("Tag", secondary=tour_tag_association, backref="tours")
-    images = relationship("Image", primaryjoin="Tour.id == Image.tour_id")
+    images = relationship("Image", primaryjoin="Transport.id == Image.transport_id", back_populates="transport")
     availabilities = relationship("TourAvailability", back_populates="tour", cascade="all, delete-orphan")
 
 class Transport(Base):
@@ -92,9 +113,10 @@ class Transport(Base):
     image_url = Column(String, nullable=True)  # Legacy field if needed
     location_url = Column(String, nullable=True)  # New field for location as a URL
 
+
     # Relationships
     tags = relationship("Tag", secondary=transport_tag_association, backref="transports")
-    images = relationship("Image", primaryjoin="Transport.id == Image.transport_id")
+    images = relationship("Image", primaryjoin="Transport.id == Image.transport_id", back_populates="transport")
     availabilities = relationship("TransportAvailability", back_populates="transport", cascade="all, delete-orphan")
 
 class TourAvailability(Base):
@@ -168,8 +190,21 @@ class Booking(Base):
     tour = relationship("Tour")
     transport = relationship("Transport")
 
-# Utility functions
-from datetime import datetime, timedelta
+class Package(Base):
+    __tablename__ = "packages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+    description = Column(String, nullable=True)
+    price = Column(Float, nullable=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Relationships
+    tours = relationship("Tour", secondary=package_tour_association, backref="packages")
+    transports = relationship("Transport", secondary=package_transport_association, backref="packages")
+    images = relationship("Image", back_populates="package")
+    creator = relationship("User")
+
 
 def generate_time_slots(start_time, end_time, interval_minutes=60):
     slots = []
