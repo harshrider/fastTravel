@@ -70,3 +70,6 @@ transport2.jpg
 static\uploads
 \.idea
 TravelWebsite
+
+alembic.ini
+alembic

@@ -52,7 +52,7 @@
                     <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/cart">Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-                    {% if user.role.value == 'A' %}
+                    {% if user.role.value == 'S' %}
                         <li class="nav-item"><a class="nav-link" href="/admin">Admin Dashboard</a></li>
                     {% endif %}
                 {% else %}
@@ -122,7 +122,7 @@
             <h3>Pricing</h3>
             <p>
                 {% if user %}
-                    {% if user.role.value == 'A' %}
+                    {% if user.role.value in ['A', 'S'] %}
                         Price: {{ tour.price_A }} THB
                     {% elif user.role.value == 'B' %}
                         Price: {{ tour.price_B }} THB
@@ -144,6 +144,14 @@
                     <input type="date" id="date" name="date" class="form-control" required>
                 </div>
                 <div class="form-group">
+                    <label for="time_slot">Select Time</label>
+                    <select id="time_slot" name="time_slot" class="form-control" required>
+                        {% for time_slot in time_slots %}
+                            <option value="{{ time_slot.strftime('%H:%M') }}">{{ time_slot.strftime('%H:%M') }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="quantity">Quantity</label>
                     <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ tour.max_tickets }}" class="form-control" style="width: 100px;" required>
                 </div>
@@ -155,7 +163,7 @@
     <!-- Footer -->
     <footer class="text-center">
         <div class="container">
-            <p>&copy; {{ current_year }} The Expedition Thailand. All rights reserved.</p>
+            <p>&copy; {{ now().year }} The Expedition Thailand. All rights reserved.</p>
         </div>
     </footer>
 
