@@ -1,14 +1,15 @@
 # routers/auth.py
 from fastapi import APIRouter, Request, Depends, HTTPException, status, Form
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from dependencies import get_db, get_current_user
+from dependencies import get_db
 from models import User, UserRoleEnum
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+from jose import jwt
 import os
 from datetime import datetime, timedelta
+from fastapi.responses import RedirectResponse, HTMLResponse
+
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -17,7 +18,7 @@ templates = Jinja2Templates(directory="templates")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Load environment variables
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
@@ -41,19 +42,17 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 
 
 @router.get("/login", response_class=RedirectResponse)
-@router.get("/login/", response_class=RedirectResponse)
 def redirect_login():
     return RedirectResponse(url="/auth/login/", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
-@router.get("/auth/login", response_class=Jinja2Templates)
+@router.get("/auth/login", response_class=HTMLResponse)
 def get_login(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
 @router.post("/auth/login", response_class=RedirectResponse)
 def post_login(
-    request: Request,
     username: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
@@ -72,14 +71,13 @@ def post_login(
     return response
 
 
-@router.get("/signup", response_class=Jinja2Templates)
+@router.get("/signup", response_class=HTMLResponse)
 def get_signup(request: Request):
     return templates.TemplateResponse("signup.html", {"request": request})
 
 
 @router.post("/auth/signup", response_class=RedirectResponse)
 def post_signup(
-    request: Request,
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
