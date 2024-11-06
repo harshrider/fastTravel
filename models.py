@@ -88,14 +88,13 @@ class Tour(Base):
     price_C = Column(Float, nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
-    max_tickets = Column(Integer, nullable=False)  # Max tickets per day
-    image_url = Column(String, nullable=True)  # Legacy field if needed
-    location_url = Column(String, nullable=True)  # New field for location as a URL
-    images = relationship("Image", primaryjoin="Tour.id == Image.tour_id", back_populates="tour")
+    max_tickets = Column(Integer, nullable=False)
+    image_url = Column(String, nullable=True)
+    location_url = Column(String, nullable=True)
 
     # Relationships
     tags = relationship("Tag", secondary=tour_tag_association, backref="tours")
-    images = relationship("Image", primaryjoin="Transport.id == Image.transport_id", back_populates="transport")
+    images = relationship("Image", primaryjoin="Tour.id == Image.tour_id", back_populates="tour")
     availabilities = relationship("TourAvailability", back_populates="tour", cascade="all, delete-orphan")
 
 class Transport(Base):
@@ -109,15 +108,15 @@ class Transport(Base):
     price_C = Column(Float, nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
-    max_seats = Column(Integer, nullable=False)  # Max seats per day
-    image_url = Column(String, nullable=True)  # Legacy field if needed
-    location_url = Column(String, nullable=True)  # New field for location as a URL
-
+    max_seats = Column(Integer, nullable=False)
+    image_url = Column(String, nullable=True)
+    location_url = Column(String, nullable=True)
 
     # Relationships
     tags = relationship("Tag", secondary=transport_tag_association, backref="transports")
     images = relationship("Image", primaryjoin="Transport.id == Image.transport_id", back_populates="transport")
     availabilities = relationship("TransportAvailability", back_populates="transport", cascade="all, delete-orphan")
+
 
 class TourAvailability(Base):
     __tablename__ = "tour_availabilities"
