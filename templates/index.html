@@ -38,7 +38,7 @@
                     <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/cart">Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-                    {% if user.role.value == 'A' %}
+                    {% if user.role.value == 'S' %}
                         <li class="nav-item"><a class="nav-link" href="/admin">Admin Dashboard</a></li>
                     {% endif %}
                 {% else %}
@@ -74,46 +74,51 @@
         <h2 class="my-4">Available Tours</h2>
         <div class="row" id="tour-list">
             {% for tour in tours %}
-            {% set extra_class = '' %}
-            {% if loop.index0 >= 6 %}
-                {% set extra_class = 'extra-item' %}
-            {% endif %}
-            {% set card_class = '' %}
-            {% set tag_names = [tag.name for tag in tour.tags] %}
-            {% if 'Gold' in tag_names %}
-                {% set card_class = 'bg-warning' %}
-            {% elif 'Silver' in tag_names %}
-                {% set card_class = 'bg-secondary' %}
-            {% elif 'Bronze' in tag_names %}
-                {% set card_class = 'bg-danger' %}
-            {% endif %}
-            <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
-                 data-name="{{ tour.name }}"
-                 data-description="{{ tour.description }}"
-                 data-tags="{% for tag in tour.tags %}{{ tag.name }} {% endfor %}">
-                <div class="card h-100 {{ card_class }}">
-                    <img src="{{ tour.images[0].url if tour.images else '/static/images/transport1.png' }}"
-                         class="card-img-top"
-                         alt="{{ tour.name }}">
+                {% set extra_class = '' %}
+                {% if loop.index0 >= 6 %}
+                    {% set extra_class = 'extra-item' %}
+                {% endif %}
+                {% set card_class = '' %}
+                {% for tag in tour.tags %}
+                    {% if tag.name == 'Gold' %}
+                        {% set card_class = 'bg-warning' %}
+                        {% break %}
+                    {% elif tag.name == 'Silver' %}
+                        {% set card_class = 'bg-secondary' %}
+                        {% break %}
+                    {% elif tag.name == 'Bronze' %}
+                        {% set card_class = 'bg-danger' %}
+                        {% break %}
+                    {% endif %}
+                {% endfor %}
+                <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
+                     data-name="{{ tour.name }}"
+                     data-description="{{ tour.description }}"
+                     data-tags="{% for tag in tour.tags %}{{ tag.name }} {% endfor %}">
+                    <div class="card h-100 {{ card_class }}">
+                        <img src="{{ tour.images[0].url if tour.images else '/static/images/transport1.png' }}"
+                             class="card-img-top"
+                             alt="{{ tour.name }}">
 
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ tour.name }}</h5>
-                        <p class="card-text">{{ tour.description[:100] }}...</p>
-                        <p class="card-text mt-auto">
-                            <strong>Price:</strong>
-                            {% if user %}
-                                {% if user.role.value == 'A' %}{{ tour.price_A }} THB
-                                {% elif user.role.value == 'B' %}{{ tour.price_B }} THB
-                                {% else %}{{ tour.price_C }} THB
-                                {% endif %}
-                            {% else %}{{ tour.price_C }} THB{% endif %}
-                        </p>
-                    </div>
-                    <div class="card-footer">
-                        <a href="/tours/{{ tour.id }}" class="btn btn-primary btn-block">View More</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ tour.name }}</h5>
+                            <p class="card-text">{{ tour.description[:100] }}...</p>
+                            <p class="card-text mt-auto">
+                                <strong>Price:</strong>
+                                {% if user %}
+                                    {% if user.role.value == 'S' %}{{ tour.price_A }} THB
+                                    {% elif user.role.value == 'B' %}{{ tour.price_B }} THB
+                                    {% elif user.role.value == 'A' %}{{ tour.price_A }} THB
+                                    {% else %}{{ tour.price_C }} THB
+                                    {% endif %}
+                                {% else %}{{ tour.price_C }} THB{% endif %}
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <a href="/tours/{{ tour.id }}" class="btn btn-primary btn-block">View More</a>
+                        </div>
                     </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
         {% if tours|length > 6 %}
@@ -128,46 +133,51 @@
         <h2 class="my-4">Available Transports</h2>
         <div class="row" id="transport-list">
             {% for transport in transports %}
-            {% set extra_class = '' %}
-            {% if loop.index0 >= 6 %}
-                {% set extra_class = 'extra-item' %}
-            {% endif %}
-            {% set card_class = '' %}
-            {% set tag_names = [tag.name for tag in transport.tags] %}
-            {% if 'Gold' in tag_names %}
-                {% set card_class = 'bg-warning' %}
-            {% elif 'Silver' in tag_names %}
-                {% set card_class = 'bg-secondary' %}
-            {% elif 'Bronze' in tag_names %}
-                {% set card_class = 'bg-danger' %}
-            {% endif %}
-            <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
-                 data-name="{{ transport.name }}"
-                 data-description="{{ transport.description }}"
-                 data-tags="{% for tag in transport.tags %}{{ tag.name }} {% endfor %}">
-                <div class="card h-100 {{ card_class }}">
-                    <img src="{{ transport.images[0].url if transport.images else '/static/images/placeholder.jpg' }}"
-                         class="card-img-top"
-                         alt="{{ transport.name }}">
+                {% set extra_class = '' %}
+                {% if loop.index0 >= 6 %}
+                    {% set extra_class = 'extra-item' %}
+                {% endif %}
+                {% set card_class = '' %}
+                {% for tag in transport.tags %}
+                    {% if tag.name == 'Gold' %}
+                        {% set card_class = 'bg-warning' %}
+                        {% break %}
+                    {% elif tag.name == 'Silver' %}
+                        {% set card_class = 'bg-secondary' %}
+                        {% break %}
+                    {% elif tag.name == 'Bronze' %}
+                        {% set card_class = 'bg-danger' %}
+                        {% break %}
+                    {% endif %}
+                {% endfor %}
+                <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
+                     data-name="{{ transport.name }}"
+                     data-description="{{ transport.description }}"
+                     data-tags="{% for tag in transport.tags %}{{ tag.name }} {% endfor %}">
+                    <div class="card h-100 {{ card_class }}">
+                        <img src="{{ transport.images[0].url if transport.images else '/static/images/placeholder.jpg' }}"
+                             class="card-img-top"
+                             alt="{{ transport.name }}">
 
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ transport.name }}</h5>
-                        <p class="card-text">{{ transport.description[:100] }}...</p>
-                        <p class="card-text mt-auto">
-                            <strong>Price:</strong>
-                            {% if user %}
-                                {% if user.role.value == 'A' %}{{ transport.price_A }} THB
-                                {% elif user.role.value == 'B' %}{{ transport.price_B }} THB
-                                {% else %}{{ transport.price_C }} THB
-                                {% endif %}
-                            {% else %}{{ transport.price_C }} THB{% endif %}
-                        </p>
-                    </div>
-                    <div class="card-footer">
-                        <a href="/transports/{{ transport.id }}" class="btn btn-primary btn-block">View More</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ transport.name }}</h5>
+                            <p class="card-text">{{ transport.description[:100] }}...</p>
+                            <p class="card-text mt-auto">
+                                <strong>Price:</strong>
+                                {% if user %}
+                                    {% if user.role.value == 'S' %}{{ transport.price_A }} THB
+                                    {% elif user.role.value == 'B' %}{{ transport.price_B }} THB
+                                    {% elif user.role.value == 'A' %}{{ transport.price_A }} THB
+                                    {% else %}{{ transport.price_C }} THB
+                                    {% endif %}
+                                {% else %}{{ transport.price_C }} THB{% endif %}
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <a href="/transports/{{ transport.id }}" class="btn btn-primary btn-block">View More</a>
+                        </div>
                     </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
         {% if transports|length > 6 %}

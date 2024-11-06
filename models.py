@@ -1,6 +1,11 @@
 from enum import Enum as PyEnum
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Table, Enum as SQLAlchemyEnum, Date, Time, Boolean
+from sqlalchemy import (
+    Column, Integer, String, Float, ForeignKey, Table,
+    Enum as SQLAlchemyEnum, Date, Time, Boolean, DateTime
+)
 from sqlalchemy.orm import relationship
+from datetime import datetime
+
 from database import Base
 
 # Association tables for many-to-many relationships
@@ -17,7 +22,8 @@ transport_tag_association = Table(
 )
 
 class UserRoleEnum(PyEnum):
-    A = "A"  # Admin
+    S = "S"  # Superuser
+    A = "A"  # AStar Customer
     B = "B"  # Business
     C = "C"  # Customer
     E = "E"  # Employee
@@ -31,9 +37,11 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.C, nullable=False)
+    credit = Column(Float, default=0.0, nullable=False)  # New field for user's credit
 
     # Relationships
     carts = relationship("Cart", back_populates="user")
+    bookings = relationship("Booking", back_populates="user")  # New relationship
 
 class Tag(Base):
     __tablename__ = "tags"
@@ -62,11 +70,12 @@ class Tour(Base):
     end_time = Column(Time, nullable=False)
     max_tickets = Column(Integer, nullable=False)  # Max tickets per day
     image_url = Column(String, nullable=True)  # Legacy field if needed
+    location_url = Column(String, nullable=True)  # New field for location as a URL
 
     # Relationships
     tags = relationship("Tag", secondary=tour_tag_association, backref="tours")
     images = relationship("Image", primaryjoin="Tour.id == Image.tour_id")
-    availabilities = relationship("TourAvailability", back_populates="tour")
+    availabilities = relationship("TourAvailability", back_populates="tour", cascade="all, delete-orphan")
 
 class Transport(Base):
     __tablename__ = "transports"
@@ -81,11 +90,12 @@ class Transport(Base):
     end_time = Column(Time, nullable=False)
     max_seats = Column(Integer, nullable=False)  # Max seats per day
     image_url = Column(String, nullable=True)  # Legacy field if needed
+    location_url = Column(String, nullable=True)  # New field for location as a URL
 
     # Relationships
     tags = relationship("Tag", secondary=transport_tag_association, backref="transports")
     images = relationship("Image", primaryjoin="Transport.id == Image.transport_id")
-    availabilities = relationship("TransportAvailability", back_populates="transport")
+    availabilities = relationship("TransportAvailability", back_populates="transport", cascade="all, delete-orphan")
 
 class TourAvailability(Base):
     __tablename__ = "tour_availabilities"
@@ -93,6 +103,7 @@ class TourAvailability(Base):
     id = Column(Integer, primary_key=True, index=True)
     tour_id = Column(Integer, ForeignKey("tours.id"), nullable=False)
     date = Column(Date, nullable=False)
+    time = Column(Time, nullable=False)  # Field for time slots
     available_tickets = Column(Integer, nullable=False)
     is_available = Column(Boolean, default=True)
 
@@ -105,6 +116,7 @@ class TransportAvailability(Base):
     id = Column(Integer, primary_key=True, index=True)
     transport_id = Column(Integer, ForeignKey("transports.id"), nullable=False)
     date = Column(Date, nullable=False)
+    time = Column(Time, nullable=False)  # Field for time slots
     available_seats = Column(Integer, nullable=False)
     is_available = Column(Boolean, default=True)
 
@@ -128,9 +140,75 @@ class CartItem(Base):
     cart_id = Column(Integer, ForeignKey("carts.id"), nullable=False)
     tour_id = Column(Integer, ForeignKey("tours.id"), nullable=True)
     transport_id = Column(Integer, ForeignKey("transports.id"), nullable=True)
+    date = Column(Date, nullable=False)  # New field for booking date
+    time = Column(Time, nullable=False)  # New field for booking time
     quantity = Column(Integer, default=1, nullable=False)
 
     # Relationships
     cart = relationship("Cart", back_populates="items")
     tour = relationship("Tour")
     transport = relationship("Transport")
+
+class Booking(Base):
+    __tablename__ = "bookings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    tour_id = Column(Integer, ForeignKey("tours.id"), nullable=True)
+    transport_id = Column(Integer, ForeignKey("transports.id"), nullable=True)
+    date = Column(Date, nullable=False)
+    time = Column(Time, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    total_price = Column(Float, nullable=False)
+    booking_date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    status = Column(String, default="Confirmed", nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="bookings")
+    tour = relationship("Tour")
+    transport = relationship("Transport")
+
+# Utility functions
+from datetime import datetime, timedelta
+
+def generate_time_slots(start_time, end_time, interval_minutes=60):
+    slots = []
+    current_time = datetime.combine(datetime.today(), start_time)
+    end_time_dt = datetime.combine(datetime.today(), end_time)
+
+    while current_time <= end_time_dt - timedelta(minutes=interval_minutes):
+        slots.append(current_time.time())
+        current_time += timedelta(minutes=interval_minutes)
+    return slots
+
+def create_tour_availability(tour, start_date, end_date, db):
+    date = start_date
+    while date <= end_date:
+        time_slots = generate_time_slots(tour.start_time, tour.end_time)
+        for time_slot in time_slots:
+            availability = TourAvailability(
+                tour_id=tour.id,
+                date=date,
+                time=time_slot,
+                available_tickets=tour.max_tickets,
+                is_available=True
+            )
+            db.add(availability)
+        date += timedelta(days=1)
+    db.commit()
+
+def create_transport_availability(transport, start_date, end_date, db):
+    date = start_date
+    while date <= end_date:
+        time_slots = generate_time_slots(transport.start_time, transport.end_time)
+        for time_slot in time_slots:
+            availability = TransportAvailability(
+                transport_id=transport.id,
+                date=date,
+                time=time_slot,
+                available_seats=transport.max_seats,
+                is_available=True
+            )
+            db.add(availability)
+        date += timedelta(days=1)
+    db.commit()
