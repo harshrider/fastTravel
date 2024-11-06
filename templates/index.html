@@ -82,13 +82,13 @@
                 {% for tag in tour.tags %}
                     {% if tag.name == 'Gold' %}
                         {% set card_class = 'bg-warning' %}
-                        {% break %}
+
                     {% elif tag.name == 'Silver' %}
                         {% set card_class = 'bg-secondary' %}
-                        {% break %}
+
                     {% elif tag.name == 'Bronze' %}
                         {% set card_class = 'bg-danger' %}
-                        {% break %}
+
                     {% endif %}
                 {% endfor %}
                 <div class="col-md-4 mb-4 filter-item {{ extra_class }}"
