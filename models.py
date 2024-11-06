@@ -50,7 +50,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.C, nullable=False)
+    role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.S, nullable=False)
     credit = Column(Float, default=0.0, nullable=False)  # New field for user's credit
 
     # Relationships

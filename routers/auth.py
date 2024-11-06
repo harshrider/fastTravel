@@ -83,7 +83,7 @@ def post_signup(
     password: str = Form(...),
     db: Session = Depends(get_db),
     credit: float = 0.0,
-    role: UserRoleEnum = UserRoleEnum.S  # Default to Superuser role here
+    #role: UserRoleEnum = "A"  # Default to Superuser role here
 ):
     existing_user = db.query(User).filter((User.username == username) | (User.email == email)).first()
     if existing_user:
@@ -94,7 +94,7 @@ def post_signup(
         username=username,
         email=email,
         password_hash=hashed_password,
-        role=role,  # Set to role parameter, which defaults to 'S' (Superuser)
+        #role=role,  # Set to role parameter, which defaults to 'S' (Superuser)
         credit=credit
     )
     db.add(new_user)
