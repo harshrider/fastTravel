@@ -511,3 +511,74 @@ def delete_transport_availability(availability_id: int, db: Session = Depends(ge
     db.commit()
     logger.info(f"Deleted availability ID {availability_id} for transport ID {transport_id}")
     return RedirectResponse(url=f"/admin/manage_transport_availability/{transport_id}", status_code=303)
+
+
+# routers/admin.py
+from fastapi import APIRouter, Depends, Request, HTTPException, Form, status
+from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
+from dependencies import admin_required, get_db
+from models import User, UserRoleEnum
+import logging
+
+router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+@router.post("/admin/update_user_role")
+def update_user_role(
+        user_id: int = Form(...),
+        new_role: str = Form(...),
+        db: Session = Depends(get_db),
+        current_user: User = Depends(admin_required)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        logger.error(f"User with ID {user_id} not found.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    try:
+        # Update the user's role
+        user.role = UserRoleEnum(new_role)
+        db.commit()
+        db.refresh(user)
+        logger.info(f"Updated role for user {user.username} to {new_role}")
+    except ValueError:
+        logger.error(f"Invalid role value: {new_role}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid role value")
+
+    return RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
+
+@router.post("/admin/create_package")
+async def create_package(
+    name: str = Form(...),
+    description: str = Form(...),
+    price_A: float = Form(...),
+    price_B: float = Form(...),
+    price_C: float = Form(...),
+    itinerary_times: List[str] = Form(...),  # List of itinerary times
+    itinerary_descriptions: List[str] = Form(...),  # List of itinerary descriptions
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required)
+):
+    # Create package
+    new_package = Package(
+        name=name,
+        description=description,
+        price_A=price_A,
+        price_B=price_B,
+        price_C=price_C,
+    )
+    db.add(new_package)
+    db.commit()
+    db.refresh(new_package)
+
+    # Add itinerary entries
+    itinerary_entries = [
+        Itinerary(package_id=new_package.id, time=datetime.strptime(itime, "%H:%M").time(), description=idesc)
+        for itime, idesc in zip(itinerary_times, itinerary_descriptions)
+    ]
+    db.bulk_save_objects(itinerary_entries)
+    db.commit()
+
+    return RedirectResponse(url="/admin", status_code=303)

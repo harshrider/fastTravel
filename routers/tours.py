@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import get_db
-from models import Tour, User
+from models import Tour, Transport, TourAvailability, User
 from fastapi.templating import Jinja2Templates
 from dependencies import get_current_user
 from datetime import datetime, timedelta
@@ -29,8 +29,8 @@ def tour_detail(
     if not tour:
         raise HTTPException(status_code=404, detail="Tour not found")
 
-    # Generate time slots for the tour
     time_slots = generate_time_slots(tour.start_time, tour.end_time)
+    transports = tour.transports  # Only transports associated with this tour
 
     return templates.TemplateResponse("tour_detail.html", {
         "request": request,
@@ -38,5 +38,18 @@ def tour_detail(
         "tags": tour.tags,
         "images": tour.images,
         "user": current_user,
-        "time_slots": time_slots
+        "time_slots": time_slots,
+        "transports": transports
     })
+
+@router.get("/tours/{tour_id}/available-dates")
+def get_available_dates(tour_id: int, db: Session = Depends(get_db)):
+    availabilities = db.query(TourAvailability).filter(
+        TourAvailability.tour_id == tour_id,
+        TourAvailability.is_available == True,
+        TourAvailability.available_tickets > 0
+    ).all()
+    unavailable_dates = [
+        str(availability.date) for availability in availabilities if availability.available_tickets <= 0
+    ]
+    return {"unavailable_dates": unavailable_dates}

@@ -300,7 +300,8 @@
                         <form action="/admin/update_user_role" method="post" class="form-inline">
                             <input type="hidden" name="user_id" value="{{ user.id }}">
                             <select name="new_role" class="form-control mr-2">
-                                <option value="A" {% if user.role.value =='A' %}selected{% endif %}>Admin</option>
+                                <option value="S" {% if user.role.value =='S' %}selected{% endif %}>SuperUser</option>
+                                <option value="A" {% if user.role.value =='A' %}selected{% endif %}>AStar</option>
                                 <option value="B" {% if user.role.value =='B' %}selected{% endif %}>Business</option>
                                 <option value="C" {% if user.role.value =='C' %}selected{% endif %}>Customer</option>
                                 <option value="E" {% if user.role.value =='E' %}selected{% endif %}>Employee</option>

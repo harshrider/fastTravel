@@ -4,36 +4,19 @@
     <meta charset="UTF-8">
     <title>{{ tour.name }} - Tour Details</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        .carousel-item img {
-            width: 100%;
-            height: 500px;
-            object-fit: cover;
-        }
-        .badge {
-            margin-right: 5px;
-        }
-        .tour-details {
-            margin-top: 20px;
-        }
-        .tour-pricing {
-            margin-top: 20px;
-        }
-        .add-to-cart-form {
-            margin-top: 30px;
-        }
-        footer {
-            background-color: #f8f9fa;
-            padding: 20px 0;
-            margin-top: 50px;
-        }
+        .carousel-item img { width: 100%; height: 500px; object-fit: cover; }
+        .badge { margin-right: 5px; }
+        .tour-details, .tour-packages, .tour-transfers, .tour-itinerary, .add-to-cart-form { margin-top: 30px; }
+        footer { background-color: #f8f9fa; padding: 20px 0; margin-top: 50px; }
     </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="/">The Expedition Thailand</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -46,9 +29,7 @@
             </ul>
             <ul class="navbar-nav ml-auto">
                 {% if user %}
-                    <li class="nav-item">
-                        <span class="navbar-text mr-3">Welcome, {{ user.username }}</span>
-                    </li>
+                    <li class="nav-item"><span class="navbar-text mr-3">Welcome, {{ user.username }}</span></li>
                     <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/cart">Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
@@ -94,54 +75,80 @@
         <p class="text-center">No images available for this tour.</p>
         {% endif %}
 
-        <!-- Tour Details -->
+        <!-- Tour Overview -->
         <div class="tour-details mt-5">
-            <h3>Description</h3>
+            <h3>Overview</h3>
             <p>{{ tour.description }}</p>
-
-            <!-- Display Tags -->
-            {% if tour.tags %}
             <h5>Tags:</h5>
             <div class="tags mb-3">
                 {% for tag in tour.tags %}
                     <span class="badge badge-info">{{ tag.name }}</span>
                 {% endfor %}
             </div>
-            {% endif %}
-
-            <h3>Details</h3>
-            <ul>
-                <li><strong>Start Time:</strong> {{ tour.start_time.strftime('%H:%M') }}</li>
-                <li><strong>End Time:</strong> {{ tour.end_time.strftime('%H:%M') }}</li>
-                <li><strong>Max Tickets per Day:</strong> {{ tour.max_tickets }}</li>
-            </ul>
         </div>
 
-        <!-- Pricing -->
-        <div class="tour-pricing">
-            <h3>Pricing</h3>
-            <p>
-                {% if user %}
-                    {% if user.role.value in ['A', 'S'] %}
-                        Price: {{ tour.price_A }} THB
-                    {% elif user.role.value == 'B' %}
-                        Price: {{ tour.price_B }} THB
-                    {% else %}
-                        Price: {{ tour.price_C }} THB
-                    {% endif %}
-                {% else %}
-                    Price: {{ tour.price_C }} THB
-                {% endif %}
-            </p>
+        <!-- Service Packages -->
+        <div class="tour-packages">
+            <h3>Service Packages</h3>
+            <form id="package-selection-form">
+                {% for package in packages %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="package_id" id="package-{{ package.id }}" value="{{ package.id }}">
+                    <label class="form-check-label" for="package-{{ package.id }}">
+                        {{ package.name }} - {{ package.description }} (Price: {% if user.role.value == 'A' %}{{ package.price_A }}{% elif user.role.value == 'B' %}{{ package.price_B }}{% else %}{{ package.price_C }}{% endif %} THB)
+                    </label>
+                </div>
+                {% endfor %}
+            </form>
         </div>
 
-        <!-- Quantity and Add to Cart Form -->
+        <!-- Transfer Options -->
+        <div class="tour-transfers">
+            <h3>Transfer Options</h3>
+            <form id="transfer-selection-form">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="transfer_id" id="transfer-none" value="none" checked>
+                    <label class="form-check-label" for="transfer-none">No transfer arrangement required</label>
+                </div>
+                {% for transport in transports %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="transfer_id" id="transfer-{{ transport.id }}" value="{{ transport.id }}">
+                    <label class="form-check-label" for="transfer-{{ transport.id }}">
+                        {{ transport.name }} - Pickup: {{ transport.pickup_location }} / Drop-off: {{ transport.dropoff_location }} (Price: {% if user.role.value == 'A' %}{{ transport.price_A }}{% elif user.role.value == 'B' %}{{ transport.price_B }}{% else %}{{ transport.price_C }}{% endif %} THB)
+                    </label>
+                </div>
+                {% endfor %}
+            </form>
+        </div>
+
+        <!-- Itinerary -->
+        <div class="tour-itinerary">
+            <h3>Itinerary</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Time</th>
+                        <th scope="col">Activity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in tour.itineraries %}
+                    <tr>
+                        <td>{{ item.time.strftime('%H:%M') }}</td>
+                        <td>{{ item.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Add to Cart Form with Date Picker -->
         <div class="add-to-cart-form">
             <form action="/cart/add" method="post">
                 <input type="hidden" name="tour_id" value="{{ tour.id }}">
                 <div class="form-group">
                     <label for="date">Select Date</label>
-                    <input type="date" id="date" name="date" class="form-control" required>
+                    <input type="text" id="date" name="date" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="time_slot">Select Time</label>
@@ -171,5 +178,25 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr("#date", {
+                dateFormat: "Y-m-d",
+                disable: [
+                    function(date) {
+                        return true;
+                    }
+                ],
+                onReady: function(selectedDates, dateStr, instance) {
+                    fetch(`/tours/{{ tour.id }}/available-dates`)
+                        .then(response => response.json())
+                        .then(data => {
+                            instance.set("disable", data.unavailable_dates.map(date => new Date(date)));
+                        });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
