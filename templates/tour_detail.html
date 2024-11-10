@@ -93,9 +93,17 @@
             <form id="package-selection-form">
                 {% for package in packages %}
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="package_id" id="package-{{ package.id }}" value="{{ package.id }}">
+                    <input class="form-check-input" type="radio" name="package_id" id="package-{{ package.id }}" value="{{ package.id }}" {% if loop.first %}checked{% endif %}>
                     <label class="form-check-label" for="package-{{ package.id }}">
-                        {{ package.name }} - {{ package.description }} (Price: {% if user.role.value == 'A' %}{{ package.price_A }}{% elif user.role.value == 'B' %}{{ package.price_B }}{% else %}{{ package.price_C }}{% endif %} THB)
+                        {{ package.name }} - {{ package.description }}
+                        (Price:
+                        {% if user and user.role.value == 'A' %}
+                            {{ package.price_A }}
+                        {% elif user and user.role.value == 'B' %}
+                            {{ package.price_B }}
+                        {% else %}
+                            {{ package.price_C }}
+                        {% endif %} THB)
                     </label>
                 </div>
                 {% endfor %}
@@ -114,7 +122,15 @@
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="transfer_id" id="transfer-{{ transport.id }}" value="{{ transport.id }}">
                     <label class="form-check-label" for="transfer-{{ transport.id }}">
-                        {{ transport.name }} - Pickup: {{ transport.pickup_location }} / Drop-off: {{ transport.dropoff_location }} (Price: {% if user.role.value == 'A' %}{{ transport.price_A }}{% elif user.role.value == 'B' %}{{ transport.price_B }}{% else %}{{ transport.price_C }}{% endif %} THB)
+                        {{ transport.name }} - Pickup: {{ transport.pickup_location }} / Drop-off: {{ transport.dropoff_location }}
+                        (Price:
+                        {% if user and user.role.value == 'A' %}
+                            {{ transport.price_A }}
+                        {% elif user and user.role.value == 'B' %}
+                            {{ transport.price_B }}
+                        {% else %}
+                            {{ transport.price_C }}
+                        {% endif %} THB)
                     </label>
                 </div>
                 {% endfor %}
@@ -123,7 +139,7 @@
 
         <!-- Itinerary -->
         <div class="tour-itinerary">
-            <h3>Itinerary</h3>
+            <h3>Itinerary - <span id="itinerary-package-name">Default Package</span></h3> <!-- Updated to show package name -->
             <table class="table">
                 <thead>
                     <tr>
@@ -131,13 +147,8 @@
                         <th scope="col">Activity</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for item in tour.itineraries %}
-                    <tr>
-                        <td>{{ item.time.strftime('%H:%M') }}</td>
-                        <td>{{ item.description }}</td>
-                    </tr>
-                    {% endfor %}
+                <tbody id="itinerary-body">
+                    <!-- Itinerary items will be injected here based on the selected package -->
                 </tbody>
             </table>
         </div>
@@ -180,7 +191,29 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+        // Function to load itinerary for a selected package
+        function loadItinerary(packageId, packageName) {
+            document.getElementById("itinerary-package-name").textContent = packageName; // Update the package name header
+            fetch(`/tours/{{ tour.id }}/package-itinerary/${packageId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const itineraryContainer = document.getElementById("itinerary-body");
+                    itineraryContainer.innerHTML = "";  // Clear current itinerary
+
+                    data.itinerary.forEach(item => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `<td>${item.time}</td><td>${item.activity}</td>`;
+                        itineraryContainer.appendChild(row);
+                    });
+                });
+        }
+
+        // Fetch the itinerary for the default selected package on page load
         document.addEventListener("DOMContentLoaded", function() {
+            const defaultPackage = document.querySelector('input[name="package_id"]:checked');
+            loadItinerary(defaultPackage.value, defaultPackage.nextElementSibling.textContent);
+
+            // Initialize flatpickr for date selection
             flatpickr("#date", {
                 dateFormat: "Y-m-d",
                 disable: [
@@ -195,6 +228,13 @@
                             instance.set("disable", data.unavailable_dates.map(date => new Date(date)));
                         });
                 }
+            });
+
+            // Load itinerary when a new package is selected
+            document.querySelectorAll('input[name="package_id"]').forEach(packageRadio => {
+                packageRadio.addEventListener('change', function() {
+                    loadItinerary(this.value, this.nextElementSibling.textContent);
+                });
             });
         });
     </script>

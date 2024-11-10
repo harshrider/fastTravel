@@ -53,7 +53,7 @@ class User(Base):
     username = Column(String(150), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.C, nullable=False)
+    role = Column(SQLAlchemyEnum(UserRoleEnum), default=UserRoleEnum.A, nullable=False)
     credit = Column(Float, default=0.0, nullable=False)
 
     # Relationships
