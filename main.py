@@ -1,10 +1,9 @@
-# main.py
 import os
 from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from routers import auth, admin, tours, transports, cart  # Ensure 'auth' router is included
+from routers import auth, admin, edit_tours, edit_transports, user_management
 from database import Base, engine, get_db
 from models import User, Tour, Transport
 from dependencies import get_current_user
@@ -16,9 +15,7 @@ from typing import Optional
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.StreamHandler()
-    ]
+    handlers=[logging.StreamHandler()]
 )
 
 # Load environment variables
@@ -34,11 +31,11 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include routers
-app.include_router(auth.router)      # Authentication routes
-app.include_router(admin.router)     # Admin routes
-app.include_router(tours.router)     # Tours routes
-app.include_router(transports.router) # Transports routes
-app.include_router(cart.router)      # Cart routes
+app.include_router(auth.router)
+app.include_router(admin.router)
+app.include_router(edit_tours.router)
+app.include_router(edit_transports.router)
+app.include_router(user_management.router)
 
 # Home route
 @app.get("/")
@@ -57,7 +54,6 @@ def home(
         transports = db.query(Transport).all()
     except Exception as e:
         logging.error(f"Error querying database: {e}")
-        # For debugging purposes, include the actual error message
         raise HTTPException(status_code=500, detail=str(e))
     return templates.TemplateResponse("index.html", {
         "request": request,

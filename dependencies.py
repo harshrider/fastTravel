@@ -1,4 +1,3 @@
-# dependencies.py
 from typing import Optional
 from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
@@ -36,11 +35,16 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optiona
         logger.error(f"JWT decoding error: {e}")
         return None
 
-def admin_required(current_user: Optional[User] = Depends(get_current_user)):
+def employee_required(current_user: Optional[User] = Depends(get_current_user)):
     if not current_user:
-        logger.warning("Access attempt with no authentication.")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    if current_user.role != UserRoleEnum.S:
-        logger.warning(f"Access denied for user '{current_user.username}' with role '{current_user.role.value}' attempting to access admin resources.")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not authorized. Current role: {current_user.role.value}")
+    if current_user.role not in [UserRoleEnum.E, UserRoleEnum.S]:  # Allow only employees and super users
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Employees only. Access denied.")
+    return current_user
+
+def superuser_required(current_user: Optional[User] = Depends(get_current_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    if current_user.role != UserRoleEnum.S:  # Allow only super users
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Super users only. Access denied.")
     return current_user
