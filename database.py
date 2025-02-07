@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get environment variables from Railway
-PGUSER = os.getenv('${{POSTGRES_USER}}')  # Username from Railway
-PGPASSWORD = os.getenv('${{POSTGRES_PASSWORD}}')  # Password from Railway
-PGHOST = os.getenv('${{RAILWAY_PRIVATE_DOMAIN}}')  # Host from Railway (Private DNS of the service)
-PGPORT = os.getenv('5432')  # Port for the database (from Railway's proxy)
-PGDATABASE = os.getenv('${{POSTGRES_DB}}')  # Database name from Railway
+PGUSER = '${{POSTGRES_USER}}'  # Username from Railway
+PGPASSWORD = '${{POSTGRES_PASSWORD}}'  # Password from Railway
+PGHOST = '${{RAILWAY_PRIVATE_DOMAIN}}'  # Host from Railway (Private DNS of the service)
+PGPORT = '5432' # Port for the database (from Railway's proxy)
+PGDATABASE = '${{POSTGRES_DB}}' # Database name from Railway
 
 # Ensure all required environment variables are set
 if not all([PGUSER, PGPASSWORD, PGHOST, PGDATABASE, PGPORT]):
