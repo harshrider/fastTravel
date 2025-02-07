@@ -7,11 +7,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get environment variables exactly as defined in Railway
-PGUSER = os.getenv("PGUSER")
-PGPASSWORD = os.getenv("PGPASSWORD")
-PGHOST = os.getenv("PGHOST")
-PGDATABASE = os.getenv("PGDATABASE")
-PGPORT = os.getenv("PGPORT", "5432")
+PGUSER = ${{POSTGRES_USER}}
+PGPASSWORD = ${{POSTGRES_PASSWORD}}
+PGHOST = ${{RAILWAY_PRIVATE_DOMAIN}}
+PGDATABASE = ${{POSTGRES_DB}}
+PGPORT = 5432
 
 # Construct the DATABASE_URL manually
 DATABASE_URL = f"postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
