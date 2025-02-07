@@ -1,23 +1,14 @@
+# database.py
 import os
 import psycopg2
-from psycopg2 import sql
 from contextlib import contextmanager
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Retrieve database connection parameters from environment variables
-PGHOST = os.getenv('PGHOST')
-PGPORT = os.getenv('PGPORT', '5432')  # Default to 5432 if not set
-PGUSER = os.getenv('PGUSER')
-PGPASSWORD = os.getenv('PGPASSWORD')
-PGDATABASE = os.getenv('PGDATABASE')
+# Get directly from Railway's environment variable
+DATABASE_URL = "postgresql://postgres:FIeQmkQFLeMMQiVXMbketFGPUZpGfUnA@postgres.railway.internal:5432/railway"
 
-# Create a connection string
-DATABASE_URL = f"postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
-
-# Establish a connection to the PostgreSQL database
 @contextmanager
 def get_db():
     conn = psycopg2.connect(DATABASE_URL)
