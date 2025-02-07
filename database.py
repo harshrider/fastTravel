@@ -9,16 +9,16 @@ load_dotenv()
 # Get environment variables from Railway
 PGUSER = '${{POSTGRES_USER}}'  # Username from Railway
 PGPASSWORD = '${{POSTGRES_PASSWORD}}'  # Password from Railway
-PGHOST = '${{RAILWAY_PRIVATE_DOMAIN}}'  # Host from Railway (Private DNS of the service)
+PGHOST = os.getenv('RAILWAY_PRIVATE_DOMAIN')
 PGPORT = '5432' # Port for the database (from Railway's proxy)
 PGDATABASE = '${{POSTGRES_DB}}' # Database name from Railway
 
 # Ensure all required environment variables are set
 if not all([PGUSER, PGPASSWORD, PGHOST, PGDATABASE, PGPORT]):
     missing_vars = []
-    if not PGUSER: missing_vars.append("POSTGRES_USER")
+    if not PGUSER: missing_vars.append("POSTGRES_USER hi")
     if not PGPASSWORD: missing_vars.append("POSTGRES_PASSWORD")
-    if not PGHOST: missing_vars.append("RAILWAY_TCP_PROXY_DOMAIN")
+    if not PGHOST: missing_vars.append("RAILWAY_TCP_PROXY_DOMAIN hi")
     if not PGDATABASE: missing_vars.append("POSTGRES_DB")
     if not PGPORT: missing_vars.append("RAILWAY_TCP_PROXY_PORT")
     raise ValueError(f"Missing required database environment variables: {', '.join(missing_vars)}")
