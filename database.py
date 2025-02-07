@@ -1,55 +1,41 @@
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+import psycopg2
+from psycopg2 import sql
+from contextlib import contextmanager
 from dotenv import load_dotenv
 
-load_dotenv()  # Load environment variables from .env file
+# Load environment variables from .env file
+load_dotenv()
 
-# Get environment variables from the Railway-provided .env
-PGUSER = os.getenv('PGUSER')  # Username (from Railway)
-PGPASSWORD = os.getenv('PGPASSWORD')  # Password (from Railway)
-PGHOST = os.getenv('PGHOST')  # Host (RAILWAY_PRIVATE_DOMAIN or custom host)
-PGPORT = os.getenv('PGPORT')  # Port (5432 by default, from Railway)
-PGDATABASE = os.getenv('PGDATABASE')  # Database name (from Railway)
+# Retrieve database connection parameters from environment variables
+PGHOST = os.getenv('PGHOST')
+PGPORT = os.getenv('PGPORT', '5432')  # Default to 5432 if not set
+PGUSER = os.getenv('PGUSER')
+PGPASSWORD = os.getenv('PGPASSWORD')
+PGDATABASE = os.getenv('PGDATABASE')
 
-# Ensure all required environment variables are set
-if not all([PGUSER, PGPASSWORD, PGHOST, PGDATABASE, PGPORT]):
-    missing_vars = []
-    if not PGUSER: missing_vars.append("PGUSER")
-    if not PGPASSWORD: missing_vars.append("PGPASSWORD")
-    if not PGHOST: missing_vars.append("PGHOST")
-    if not PGDATABASE: missing_vars.append("PGDATABASE")
-    if not PGPORT: missing_vars.append("PGPORT")
-    raise ValueError(f"Missing required database environment variables: {', '.join(missing_vars)}")
-
-# Construct the DATABASE_URL using the environment variables
+# Create a connection string
 DATABASE_URL = f"postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
 
-# Configure SSL for Railway (optional, but generally required in production)
-connect_args = {
-    "sslmode": "require",
-    "connect_timeout": 60
-}
-
-# Create the SQLAlchemy engine with the DATABASE_URL and connection arguments
-engine = create_engine(
-    DATABASE_URL,
-    connect_args=connect_args,
-    echo=True,  # Set to True for debugging queries
-    pool_size=5,
-    max_overflow=10,
-    pool_timeout=30
-)
-
-# Set up session maker and declarative base
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-def get_db():
-    """Dependency for database session"""
-    db = SessionLocal()
+# Establish a connection to the PostgreSQL database
+@contextmanager
+def get_db_connection():
+    conn = psycopg2.connect(DATABASE_URL)
     try:
-        yield db
+        yield conn
     finally:
-        db.close()
+        conn.close()
+
+# Function to execute a query
+def execute_query(query, params=None):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query, params)
+            conn.commit()
+
+# Function to fetch results from a query
+def fetch_results(query, params=None):
+    with get_db_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchall()
