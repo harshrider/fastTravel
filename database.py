@@ -10,7 +10,7 @@ load_dotenv()
 PGUSER = '${{POSTGRES_USER}}'  # Username from Railway
 PGPASSWORD = '${{POSTGRES_PASSWORD}}'  # Password from Railway
 PGHOST = os.getenv('RAILWAY_PRIVATE_DOMAIN')
-PGPORT = '5432' # Port for the database (from Railway's proxy)
+PGPORT = 'postgress' # Port for the database (from Railway's proxy)
 PGDATABASE = '${{POSTGRES_DB}}' # Database name from Railway
 
 # Ensure all required environment variables are set
