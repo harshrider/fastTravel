@@ -6,33 +6,38 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Construct the DATABASE_URL using individual environment variables
-PGUSER = os.getenv("POSTGRES_USER", "postgres")
-PGPASSWORD = os.getenv("POSTGRES_PASSWORD")
-PGHOST = os.getenv("RAILWAY_PRIVATE_DOMAIN")
-PGDATABASE = os.getenv("POSTGRES_DB", "railway")
+# Get environment variables exactly as defined in Railway
+PGUSER = os.getenv("PGUSER")
+PGPASSWORD = os.getenv("PGPASSWORD")
+PGHOST = os.getenv("PGHOST")
+PGDATABASE = os.getenv("PGDATABASE")
 PGPORT = os.getenv("PGPORT", "5432")
 
 # Construct the DATABASE_URL manually
 DATABASE_URL = f"postgresql://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
 
 if not all([PGUSER, PGPASSWORD, PGHOST, PGDATABASE]):
-    raise ValueError("Missing required database environment variables")
+    missing_vars = []
+    if not PGUSER: missing_vars.append("PGUSER")
+    if not PGPASSWORD: missing_vars.append("PGPASSWORD")
+    if not PGHOST: missing_vars.append("PGHOST")
+    if not PGDATABASE: missing_vars.append("PGDATABASE")
+    raise ValueError(f"Missing required database environment variables: {', '.join(missing_vars)}")
 
 # Configure SSL for Railway
 connect_args = {
     "sslmode": "require",
-    "connect_timeout": 60  # Adding a connection timeout
+    "connect_timeout": 60
 }
 
 # Create the engine with echo=True for debugging
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
-    echo=True,  # Enable SQL query logging
-    pool_size=5,  # Set connection pool size
-    max_overflow=10,  # Maximum number of connections that can be created beyond pool_size
-    pool_timeout=30  # Timeout for getting a connection from the pool
+    echo=True,
+    pool_size=5,
+    max_overflow=10,
+    pool_timeout=30
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
