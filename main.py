@@ -18,6 +18,17 @@ logging.basicConfig(
     handlers=[logging.StreamHandler()]
 )
 
+# Add this after your database imports
+from sqlalchemy import text
+
+# Test database connection
+try:
+    with engine.connect() as connection:
+        result = connection.execute(text("SELECT 1"))
+        print("Database connection successful!")
+except Exception as e:
+    print(f"Database connection failed: {str(e)}")
+
 # Load environment variables
 load_dotenv()
 
