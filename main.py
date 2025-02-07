@@ -1,6 +1,4 @@
-import os
 import logging
-from contextlib import closing
 from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -35,7 +33,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Test database connection
 try:
-    with closing(get_db()) as conn:  # Using context manager from database.py
+    with get_db() as conn:  # Directly use your existing context manager
         with conn.cursor() as cursor:
             cursor.execute("SELECT 1")
             logger.info("Database connection successful!")
