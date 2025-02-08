@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-
-def get_current_user(request: Request, db=Depends(get_db)) -> Optional[User]:
+def get_current_user(request: Request, db=Depends(get_db)) -> Optional[User ]:
     token = request.cookies.get("access_token")
     if not token:
         logger.info("No access_token cookie found.")
@@ -46,22 +45,20 @@ def get_current_user(request: Request, db=Depends(get_db)) -> Optional[User]:
             logger.info(f"Authenticated user: {user.username}")
             return user
         else:
-            logger.info(f"User '{username}' not found in the database.")
+            logger.info(f"User  '{username}' not found in the database.")
             return None
     except JWTError as e:
         logger.error(f"JWT decoding error: {e}")
         return None
 
-
-def employee_required(current_user: Optional[User] = Depends(get_current_user)):
+def employee_required(current_user: Optional[User ] = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     if current_user.role not in [UserRoleEnum.E, UserRoleEnum.S]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Employees only. Access denied.")
     return current_user
 
-
-def superuser_required(current_user: Optional[User] = Depends(get_current_user)):
+def superuser_required(current_user: Optional[User ] = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     if current_user.role != UserRoleEnum.S:
