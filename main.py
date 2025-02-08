@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from routers import auth, admin, edit_tours, edit_transports, user_management
-from database import Base, engine, get_db
+#from database import Base, engine, get_db
 from models import User, Tour, Transport
 from dependencies import get_current_user
 from dotenv import load_dotenv

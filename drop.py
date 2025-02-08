@@ -37,7 +37,7 @@ def drop_tables_except_users():
 def create_tables():
     # Create all tables defined in Base
     print("Creating tables...")
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
     print("Tables created successfully.")
 
 def add_test_data():
