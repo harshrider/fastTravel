@@ -1,7 +1,28 @@
 # models.py
 from enum import Enum
 from datetime import datetime, timedelta, time, date
+from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean
+from database import Base
 
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True)
+    email = Column(String(100), unique=True)
+    role = Column(String(20))
+
+class Tour(Base):
+    __tablename__ = 'tours'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    description = Column(String(500))
+    price_A = Column(Float)
+    price_B = Column(Float)
+    price_C = Column(Float)
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+    max_tickets = Column(Integer)
+    location_url = Column(String(200))
 
 # Enums remain the same
 class UserRoleEnum(str, Enum):
