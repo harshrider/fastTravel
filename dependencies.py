@@ -1,76 +1,90 @@
-from typing import Optional
-from fastapi import Depends, HTTPException, Request, status
-from jose import JWTError, jwt
-from database import get_db
-from models import User, UserRoleEnum
-import os
-import logging
+# dependencies.py
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from database import SessionLocal
+from typing import Optional
+import psycopg2
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
 
+# Import from your local files
+from database import SessionLocal  # SQLAlchemy session
+from models import User  # SQLAlchemy User model
+
+# Configuration (replace with your actual values)
+SECRET_KEY = "your-secret-key-here"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-
-# Configure logging
-logger = logging.getLogger(__name__)
-
-# Load environment variables
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-
-
-# def get_current_user(request: Request, db=Depends(get_db)) -> Optional[User]:
-#     token = request.cookies.get("access_token")
-#     if not token:
-#         logger.info("No access_token cookie found.")
-#         return None
-#     try:
-#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         username: str = payload.get("sub")
-#         if username is None:
-#             logger.info("No 'sub' in JWT payload.")
-#             return None
-#
-#         # Execute raw SQL query using psycopg2
-#         with db.cursor() as cursor:
-#             cursor.execute(
-#                 "SELECT id, username, email, password_hash, role, credit FROM users WHERE username = %s",
-#                 (username,)
-#             )
-#             user_data = cursor.fetchone()
-#
-#         if user_data:
-#             user = User(
-#                 id=user_data[0],
-#                 username=user_data[1],
-#                 email=user_data[2],
-#                 password_hash=user_data[3],
-#                 role=UserRoleEnum(user_data[4]),
-#                 credit=user_data[5]
-#             )
-#             logger.info(f"Authenticated user: {user.username}")
-#             return user
-#         else:
-#             logger.info(f"User '{username}' not found in the database.")
-#             return None
-#     except JWTError as e:
-#         logger.error(f"JWT decoding error: {e}")
-#         return None
+def get_db():
+    """
+    Dependency to get SQLAlchemy database session
+    Use this for ORM operations
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-# def employee_required(current_user: Optional[User] = Depends(get_current_user)):
-#     if not current_user:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-#     if current_user.role not in [UserRoleEnum.E, UserRoleEnum.S]:
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Employees only. Access denied.")
-#     return current_user
-#
-#
-# def superuser_required(current_user: Optional[User] = Depends(get_current_user)):
-#     if not current_user:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-#     if current_user.role != UserRoleEnum.S:
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Super users only. Access denied.")
-#     return current_user
+def get_raw_db():
+    """
+    Dependency to get raw psycopg2 connection
+    Use this for direct SQL operations
+    """
+    DATABASE_URL = "postgresql://user:password@localhost/dbname"  # Replace with your actual URL
+    conn = psycopg2.connect(DATABASE_URL)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(
+        token: str = Depends(oauth2_scheme),
+        db: Session = Depends(get_db)  # Using SQLAlchemy session here
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    # Using SQLAlchemy ORM query instead of raw SQL
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise credentials_exception
+
+    return user
+
+
+async def get_current_active_user(
+        current_user: User = Depends(get_current_user)
+):
+    if current_user.disabled:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
