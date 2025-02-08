@@ -17,7 +17,7 @@ from models import Base, User, Tour, Transport  # Updated for SQLAlchemy
 from dependencies import get_current_user
 #from routers import auth, admin, edit_tours, edit_transports, user_management
 
-# Configure logging
+# Configure logging  
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
