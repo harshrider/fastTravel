@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from typing import Optional
 from dotenv import load_dotenv
 from psycopg2 import OperationalError
-
+import psycopg2
 # Local imports
 from database import get_db
 from models import User, Tour, Transport
@@ -23,7 +23,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(debug=True)
 
 # SQL statements to create tables (corrected order)
 CREATE_TABLES_SQL = """
@@ -146,6 +145,17 @@ CREATE TABLE IF NOT EXISTS bookings (
     status booking_status_enum NOT NULL DEFAULT 'Confirmed'
 );
 """
+try:
+    with get_db() as conn:  # Directly use your existing context manager
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            logger.info("Database connection successful!")
+            cursor.execute(CREATE_TABLES_SQL)
+            conn.commit()
+            logger.info("Database tables created successfully.")
+except OperationalError as e:
+    logger.error(f"Database connection failed: {str(e)}")
+    raise RuntimeError("Database connection failed") from e
 
 
 def create_tables():
@@ -204,7 +214,7 @@ def fetch_transports(db):
         ]
 
 
-@app.on_event("startup")
+
 async def startup_event():
     """Initialize application services on startup."""
     try:
@@ -218,7 +228,7 @@ async def startup_event():
         logger.error(f"Database connection failed: {str(e)}")
         raise RuntimeError("Database connection failed") from e
 
-
+app = FastAPI(debug=True)
 # Setup template and static files
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
