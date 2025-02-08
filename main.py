@@ -1,4 +1,6 @@
 import logging
+import os
+
 from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -84,11 +86,11 @@ except OperationalError as e:
     raise RuntimeError("Database connection failed") from e
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(admin.router)
-app.include_router(edit_tours.router)
-app.include_router(edit_transports.router)
-app.include_router(user_management.router)
+# app.include_router(auth.router)
+# app.include_router(admin.router)
+# app.include_router(edit_tours.router)
+# app.include_router(edit_transports.router)
+# app.include_router(user_management.router)
 
 
 # Updated home route using hybrid approach
