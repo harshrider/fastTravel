@@ -11,12 +11,8 @@ from database import SessionLocal
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-def get_current_user(
-    db: Session = Depends(SessionLocal),
-    token: str = Depends(oauth2_scheme)
-):
-    # Your authentication logic using SQLAlchemy session
-    # ...
+
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
@@ -64,17 +60,17 @@ ALGORITHM = os.getenv("ALGORITHM", "HS256")
 #         return None
 
 
-def employee_required(current_user: Optional[User] = Depends(get_current_user)):
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    if current_user.role not in [UserRoleEnum.E, UserRoleEnum.S]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Employees only. Access denied.")
-    return current_user
-
-
-def superuser_required(current_user: Optional[User] = Depends(get_current_user)):
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    if current_user.role != UserRoleEnum.S:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Super users only. Access denied.")
-    return current_user
+# def employee_required(current_user: Optional[User] = Depends(get_current_user)):
+#     if not current_user:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+#     if current_user.role not in [UserRoleEnum.E, UserRoleEnum.S]:
+#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Employees only. Access denied.")
+#     return current_user
+#
+#
+# def superuser_required(current_user: Optional[User] = Depends(get_current_user)):
+#     if not current_user:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+#     if current_user.role != UserRoleEnum.S:
+#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Super users only. Access denied.")
+#     return current_user
