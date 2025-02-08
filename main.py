@@ -15,7 +15,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from database import get_db
 from models import Base, User, Tour, Transport  # Updated for SQLAlchemy
 from dependencies import get_current_user
-from routers import auth, admin, edit_tours, edit_transports, user_management
+#from routers import auth, admin, edit_tours, edit_transports, user_management
 
 # Configure logging
 logging.basicConfig(
