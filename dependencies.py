@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
+from sqlalchemy.orm import Session
 from database import get_db
 from models import User, UserRoleEnum
 import os
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-def get_current_user(request: Request, db=Depends(get_db)) -> Optional[User ]:
+def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     token = request.cookies.get("access_token")
     if not token:
         logger.info("No access_token cookie found.")
@@ -24,43 +25,26 @@ def get_current_user(request: Request, db=Depends(get_db)) -> Optional[User ]:
         if username is None:
             logger.info("No 'sub' in JWT payload.")
             return None
-
-        # Execute raw SQL query using psycopg2
-        with db.cursor() as cursor:
-            cursor.execute(
-                "SELECT id, username, email, password_hash, role, credit FROM users WHERE username = %s",
-                (username,)
-            )
-            user_data = cursor.fetchone()
-
-        if user_data:
-            user = User(
-                id=user_data[0],
-                username=user_data[1],
-                email=user_data[2],
-                password_hash=user_data[3],
-                role=UserRoleEnum(user_data[4]),
-                credit=user_data[5]
-            )
+        user = db.query(User).filter(User.username == username).first()
+        if user:
             logger.info(f"Authenticated user: {user.username}")
-            return user
         else:
-            logger.info(f"User  '{username}' not found in the database.")
-            return None
+            logger.info(f"User '{username}' not found in the database.")
+        return user
     except JWTError as e:
         logger.error(f"JWT decoding error: {e}")
         return None
 
-def employee_required(current_user: Optional[User ] = Depends(get_current_user)):
+def employee_required(current_user: Optional[User] = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    if current_user.role not in [UserRoleEnum.E, UserRoleEnum.S]:
+    if current_user.role not in [UserRoleEnum.E, UserRoleEnum.S]:  # Allow only employees and super users
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Employees only. Access denied.")
     return current_user
 
-def superuser_required(current_user: Optional[User ] = Depends(get_current_user)):
+def superuser_required(current_user: Optional[User] = Depends(get_current_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    if current_user.role != UserRoleEnum.S:
+    if current_user.role != UserRoleEnum.S:  # Allow only super users
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Super users only. Access denied.")
     return current_user

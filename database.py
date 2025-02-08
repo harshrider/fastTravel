@@ -1,33 +1,26 @@
 import os
-import psycopg2
-from contextlib import contextmanager
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
-# Database connection URL
 DATABASE_URL = "postgresql://postgres:FIeQmkQFLeMMQiVXMbketFGPUZpGfUnA@postgres.railway.internal:5432/railway"
 
-@contextmanager
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL not found in environment variables")
+
+connect_args = {"sslmode": "require"} if "postgresql" in DATABASE_URL else {}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Add this to database.py
 def get_db():
-    """Context manager for database connection."""
-    conn = psycopg2.connect(DATABASE_URL)
+    db = SessionLocal()
     try:
-        yield conn
+        yield db
     finally:
-        conn.close()
-
-def execute_query(query, params=None):
-    """Execute a database query."""
-    with get_db() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
-            conn.commit()
-
-def fetch_results(query, params=None):
-    """Fetch results from a database query."""
-    with get_db() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
-            return cursor.fetchall()
+        db.close()
