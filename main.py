@@ -10,6 +10,9 @@ from dependencies import get_current_user
 from dotenv import load_dotenv
 import logging
 from typing import Optional
+# Add at the top with other imports
+from test_data import create_safari_world_tour
+from database import SessionLocal
 
 # Configure logging
 logging.basicConfig(
@@ -61,3 +64,15 @@ def home(
         "transports": transports,
         "user": current_user
     })
+# Add this after table creation but before mounting routes
+@app.on_event("startup")
+def initialize_test_data():
+    """Create test data on application startup"""
+    db = SessionLocal()
+    try:
+        create_safari_world_tour(db)
+        logging.info("Test data initialization completed successfully")
+    except Exception as e:
+        logging.error(f"Test data initialization failed: {str(e)}")
+    finally:
+        db.close()

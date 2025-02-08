@@ -6,7 +6,7 @@ def create_safari_world_tour(db: Session):
     # Ensure there is a test user for created_by in packages
     test_user = db.query(User).filter_by(username="testuser").first()
     if not test_user:
-        test_user = User(username="testuser", email="testuser@example.com", password_hash="hashedpassword", role="C")
+        test_user = User(username="testuser", email="testuser@example.com", password_hash="hashedpassword", role="S")
         db.add(test_user)
         db.commit()
         db.refresh(test_user)
