@@ -1,6 +1,5 @@
 from sqlalchemy import MetaData, Table, create_engine, text
 from sqlalchemy.orm import sessionmaker
-from database import Base
 from models import User, Tour, Transport, Package, Tag
 from datetime import time
 
@@ -37,7 +36,7 @@ def drop_tables_except_users():
 def create_tables():
     # Create all tables defined in Base
     print("Creating tables...")
-    # Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     print("Tables created successfully.")
 
 def add_test_data():
