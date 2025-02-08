@@ -1,29 +1,9 @@
-# database.py
 import os
-<<<<<<< HEAD
-import psycopg2
-from contextlib import contextmanager
-=======
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
->>>>>>> parent of fc00cf5 (updating database var)
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 
-
-<<<<<<< HEAD
-load_dotenv()
-
-# Get directly from Railway's environment variable
-DATABASE_URL = "postgresql://postgres:FIeQmkQFLeMMQiVXMbketFGPUZpGfUnA@postgres.railway.internal:5432/railway"
-
-@contextmanager
-def get_db():
-    conn = psycopg2.connect(DATABASE_URL)
-=======
 load_dotenv()  # Load environment variables from .env file
 
 # Get environment variables from the Railway-provided .env
@@ -69,29 +49,7 @@ Base = declarative_base()
 def get_db():
     """Dependency for database session"""
     db = SessionLocal()
->>>>>>> parent of fc00cf5 (updating database var)
     try:
         yield db
     finally:
-<<<<<<< HEAD
-        conn.close()
-#DATABASE_URL = "postgresql://user:password@localhost/dbname"
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-# Function to execute a query
-def execute_query(query, params=None):
-    with get_db() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
-            conn.commit()
-
-# Function to fetch results from a query
-def fetch_results(query, params=None):
-    with get_db() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, params)
-            return cursor.fetchall()
-=======
         db.close()
->>>>>>> parent of fc00cf5 (updating database var)

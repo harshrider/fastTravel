@@ -1,5 +1,6 @@
 from sqlalchemy import MetaData, Table, create_engine, text
 from sqlalchemy.orm import sessionmaker
+from database import Base
 from models import User, Tour, Transport, Package, Tag
 from datetime import time
 
