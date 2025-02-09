@@ -89,7 +89,7 @@ def post_signup(username: str = Form(...), email: str = Form(...), password: str
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username or email already registered")
 
     hashed_password = get_password_hash(password)
-    new_user = User(username=username, email=email, password_hash=hashed_password)
+    new_user = User(username=username, email=email, password_hash=hashed_password, role='S')
     db.add(new_user)
     db.commit()
 
