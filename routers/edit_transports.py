@@ -11,7 +11,7 @@ templates = Jinja2Templates(directory="templates")
 
 @router.get("/create", response_class=HTMLResponse)
 def create_transport_form(request: Request, current_user: User = Depends(employee_required)):
-    return templates.TemplateResponse("create_transport.html", {"request": request, "user": current_user})
+    return templates.TemplateResponse("edit_transport.html", {"request": request, "user": current_user})
 
 @router.post("/create")
 async def create_transport(
