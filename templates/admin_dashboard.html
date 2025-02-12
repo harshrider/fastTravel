@@ -3,8 +3,8 @@
 <h1>Admin Dashboard</h1>
 
 {% if user.role in ['E', 'S'] %}
-  <a href="/admin/tours/create">Create New Tour</a><br>
-  <a href="/admin/transports/create">Create New Transport</a><br>
+  <a href="/admin/tours/edit_tour">Create New Tour</a><br>
+  <a href="/admin/transports/edit_transport">Create New Transport</a><br>
 {% endif %}
 
 {% if user.role == 'S' %}
