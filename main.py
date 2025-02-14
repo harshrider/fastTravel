@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request, Depends, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from routers import auth, admin, edit_tours, edit_transports, user_management
+from routers import auth, admin, edit_tours, edit_transports, user_management, cart, tours, transports
 from database import Base, engine, get_db
 from models import User, Tour, Transport
 from dependencies import get_current_user
@@ -39,6 +39,11 @@ app.include_router(admin.router)
 app.include_router(edit_tours.router)
 app.include_router(edit_transports.router)
 app.include_router(user_management.router)
+app.include_router(cart.router)
+app.include_router(tours.router)
+app.include_router(transports.router)
+
+
 
 # Home route
 @app.get("/")

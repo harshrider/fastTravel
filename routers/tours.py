@@ -20,36 +20,30 @@ def generate_time_slots(start_time, end_time, interval_minutes=60):
     return slots
 
 
-@router.get("/tours/{tour_id}")
-def tour_detail(
+# Update your tour detail route
+@router.get("/{tour_id}", response_class=HTMLResponse)
+async def tour_detail(
         tour_id: int,
         request: Request,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    # Fetch the tour by ID
     tour = db.query(Tour).filter(Tour.id == tour_id).first()
     if not tour:
         raise HTTPException(status_code=404, detail="Tour not found")
 
-    # Generate available time slots
-    time_slots = generate_time_slots(tour.start_time, tour.end_time)
-
-    # Fetch transports and packages associated with the tour
-    transports = tour.transports
-    packages = tour.packages  # Include packages to display in the template
+    # Get related data
+    transports = db.query(Transport).all()
+    packages = db.query(Package).filter(Package.tours.any(id=tour_id)).all()
 
     return templates.TemplateResponse("tour_detail.html", {
         "request": request,
         "tour": tour,
-        "tags": tour.tags,
-        "images": tour.images,
-        "user": current_user,
-        "time_slots": time_slots,
         "transports": transports,
-        "packages": packages  # Send packages to the template
+        "packages": packages,
+        "user": current_user,
+        "time_slots": generate_time_slots(tour.start_time, tour.end_time)
     })
-
 
 @router.get("/tours/{tour_id}/available-dates")
 def get_available_dates(tour_id: int, db: Session = Depends(get_db)):
