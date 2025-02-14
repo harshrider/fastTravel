@@ -90,8 +90,7 @@ async def create_tour(
                 tour_id=new_tour.id,
                 date=current_date,
                 time=datetime.strptime("00:00", "%H:%M").time(),  # Set actual time
-                available_tickets=max_tickets,
-                price_modifier=0.0
+                available_tickets=max_tickets
             ))
 
         # Handle image uploads
