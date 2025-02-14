@@ -108,9 +108,9 @@ class Tour(Base):
     location_url = Column(String(255), nullable=True)
     cancellation_policy = Column(String(1000), nullable=True, default="No cancellation policy specified.")
     refund_policy = Column(String(1000), nullable=True, default="No refund policy specified.")
-    # rate_A = Column(String(1000), nullable=True, default="Standard rate applies.")
-    # rate_B = Column(String(1000), nullable=True, default="Standard rate applies.")
-    # rate_C = Column(String(1000), nullable=True, default="Standard rate applies.")
+    rate_A = Column(String(1000), nullable=True, default="Standard rate applies.")
+    rate_B = Column(String(1000), nullable=True, default="Standard rate applies.")
+    rate_C = Column(String(1000), nullable=True, default="Standard rate applies.")
 
     # Relationships
     tags = relationship("Tag", secondary=tour_tag_association, backref="tours")
