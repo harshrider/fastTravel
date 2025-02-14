@@ -32,7 +32,7 @@ async def create_tour(
     )
     db.add(new_tour)
     db.commit()
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/tours", status_code=303)
 
 @router.get("/{tour_id}/edit", response_class=HTMLResponse)
 def edit_tour_form(tour_id: int, request: Request, db: Session = Depends(get_db), current_user: User = Depends(employee_required)):
@@ -76,4 +76,4 @@ async def delete_tour(tour_id: int, db: Session = Depends(get_db), current_user:
         raise HTTPException(status_code=404, detail="Tour not found")
     db.delete(tour)
     db.commit()
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/admin/tours", status_code=303)
