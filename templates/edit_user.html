@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Users - Admin</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item"><a class="nav-link" href="/admin">Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/admin/tours">Tours</a></li>
+                <li class="nav-item"><a class="nav-link" href="/admin/transports">Transports</a></li>
+                <li class="nav-item active"><a class="nav-link" href="/admin/users">Users</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2>Manage Users</h2>
+
+        <!-- User Role Management Table -->
+        <div class="mt-4">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th>Update Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role.value }}</td>
+                        <td>
+                            <form action="/admin/update_user_role" method="post" class="form-inline">
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <select name="new_role" class="form-control mr-2">
+                                    {% for role in ['S', 'A', 'B', 'C', 'E', 'O'] %}
+                                    <option value="{{ role }}" {% if user.role.value == role %}selected{% endif %}>
+                                        {{ role }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

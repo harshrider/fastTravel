@@ -19,7 +19,6 @@ def admin_dashboard(
         "admin_dashboard.html",
         {"request": request, "user": current_user}
     )
-# routers/admin.py
 @router.get("/admin/tours", response_class=HTMLResponse)
 async def manage_tours(
     request: Request,
