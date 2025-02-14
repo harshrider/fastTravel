@@ -167,6 +167,7 @@ class TourAvailability(Base):
     time = Column(Time, nullable=False)
     available_tickets = Column(Integer, nullable=False)
     is_available = Column(Boolean, default=True)
+    price_modifier = Column(Float, default=0.0)  # Add this line
 
     # Relationships
     tour = relationship("Tour", back_populates="availabilities")

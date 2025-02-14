@@ -89,8 +89,7 @@ async def create_tour(
             db.add(TourAvailability(
                 tour_id=new_tour.id,
                 date=current_date,
-                available_tickets=max_tickets,
-                price_modifier=0.0
+                available_tickets=max_tickets
             ))
 
         # Handle image uploads
