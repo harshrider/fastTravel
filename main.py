@@ -27,7 +27,16 @@ load_dotenv()
 app = FastAPI(debug=True)
 
 # Create database tables
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
+
+# With:
+def reset_database():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+
+if __name__ == "__main__":
+    reset_database()
 
 # Template and static files setup
 templates = Jinja2Templates(directory="templates")
