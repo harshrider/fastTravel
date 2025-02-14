@@ -99,26 +99,18 @@
                             <div class="card text-center">
                                 <div class="card-body">
                                     <h5 class="card-title">Rate A</h5>
-                                    <p class="card-text">{{ tour.rate_A or 'Standard rate details' }}</p>
+                                    <p class="card-text">
+                                        {% if user %}
+                                        {% if user.role.value == 'S' %}{{ tour.rate_a }}
+                                        {% elif user.role.value == 'B' %}{{ tour.rate_b }}
+                                        {% else %}{{ tour.rate_c }}
+                                        {% endif %}
+                                        {% else %}{{ tour.rate_C }}{% endif %} THB
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title">Rate B</h5>
-                                    <p class="card-text">{{ tour.rate_B or 'Standard rate details' }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="card-title">Rate C</h5>
-                                    <p class="card-text">{{ tour.rate_C or 'Standard rate details' }}</p>
-                                </div>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -233,36 +225,6 @@
     </div>
 </div>
 
-        <!-- Add rate descriptions -->
-<div class="rate-descriptions mt-4">
-    <h4>Rate Details</h4>
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Rate A</h5>
-                    <p class="card-text">{{ tour.rate_A }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Rate B</h5>
-                    <p class="card-text">{{ tour.rate_B }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Rate C</h5>
-                    <p class="card-text">{{ tour.rate_C }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Add transport display -->
 <div class="transport-section mt-4">
