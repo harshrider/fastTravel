@@ -1,48 +1,49 @@
 # routers/edit_tours.py
-from datetime import timedelta
-from msilib.schema import File
-
-from fastapi import APIRouter, Depends, Request, Form, HTTPException, UploadFile
+from datetime import date, datetime, timedelta
+from typing import List
+from uuid import uuid4
+import os
+from fastapi import APIRouter, Depends, Request, HTTPException, Form, UploadFile, File,status
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from dependencies import get_db, employee_required
+from dependencies import get_db, employee_required, logger
 from models import Tour, Tag, Image, TourAvailability, User, Transport
 from fastapi.templating import Jinja2Templates
 
 router = APIRouter(prefix="/admin/tours", tags=["tours"])
 templates = Jinja2Templates(directory="templates")
 
-@router.get("/create", response_class=HTMLResponse)
-def create_tour_form(request: Request, current_user: User = Depends(employee_required)):
-    return templates.TemplateResponse("edit_tour.html", {"request": request, "user": current_user})
 
 @router.post("/create")
 async def create_tour(
-    # Existing parameters
-    name: str = Form(...),
-    description: str = Form(...),
-    price_A: float = Form(...),
-    price_B: float = Form(...),
-    price_C: float = Form(...),
-    start_time: str = Form(...),
-    end_time: str = Form(...),
-    max_tickets: int = Form(...),
-    cancellation_policy: str = Form(...),
-    refund_policy: str = Form(...),
-    rate_A: str = Form(...),
-    rate_B: str = Form(...),
-    rate_C: str = Form(...),
-    location_url: str = Form(None),
-    transport_ids: list[int] = Form([]),
-    tags: str = Form(''),
-    images: list[UploadFile] = File([]),
-    start_date: 2/14/2025 = Form(...),  # Add these
-    end_date: 2/14/2030 = Form(...),    # Add these
-    db: Session = Depends(get_db),
-    current_user: User = Depends(employee_required)
+        name: str = Form(...),
+        description: str = Form(...),
+        price_A: float = Form(...),
+        price_B: float = Form(...),
+        price_C: float = Form(...),
+        start_time: str = Form(...),
+        end_time: str = Form(...),
+        max_tickets: int = Form(...),
+        cancellation_policy: str = Form(...),
+        refund_policy: str = Form(...),
+        rate_A: str = Form(...),
+        rate_B: str = Form(...),
+        rate_C: str = Form(...),
+        location_url: str = Form(None),
+        transport_ids: List[int] = Form([]),
+        tags: str = Form(''),
+        images: List[UploadFile] = File(None),
+        start_date: date = Form(...),  # Corrected type
+        end_date: date = Form(...),  # Corrected type
+        db: Session = Depends(get_db),
+        current_user: User = Depends(employee_required)
 ):
     try:
+        # Convert time strings to time objects
+        start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+        end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+
         # Create new tour with all fields
         new_tour = Tour(
             name=name,
@@ -50,8 +51,8 @@ async def create_tour(
             price_A=price_A,
             price_B=price_B,
             price_C=price_C,
-            start_time=start_time,
-            end_time=end_time,
+            start_time=start_time_obj,
+            end_time=end_time_obj,
             max_tickets=max_tickets,
             cancellation_policy=cancellation_policy,
             refund_policy=refund_policy,
@@ -62,48 +63,71 @@ async def create_tour(
         )
 
         # Handle transports
-        transports = db.query(Transport).filter(Transport.id.in_(transport_ids)).all()
-        new_tour.transports = transports
+        if transport_ids:
+            transports = db.query(Transport).filter(Transport.id.in_(transport_ids)).all()
+            new_tour.transports = transports
 
         # Handle tags
         if tags:
-            tag_list = [t.strip() for t in tags.split(',')]
+            tag_list = [t.strip() for t in tags.split(',') if t.strip()]
             for tag_name in tag_list:
                 tag = db.query(Tag).filter(func.lower(Tag.name) == func.lower(tag_name)).first()
                 if not tag:
                     tag = Tag(name=tag_name)
                     db.add(tag)
+                    db.commit()  # Commit to get tag ID
                 new_tour.tags.append(tag)
 
         db.add(new_tour)
         db.commit()
+        db.refresh(new_tour)
 
         # Create availability records
         delta = end_date - start_date
         for i in range(delta.days + 1):
-            date = start_date + timedelta(days=i)
+            current_date = start_date + timedelta(days=i)
             db.add(TourAvailability(
                 tour_id=new_tour.id,
-                date=date,
+                date=current_date,
                 available_tickets=max_tickets,
                 price_modifier=0.0
             ))
 
         # Handle image uploads
-        for image in images:
-            if image.content_type not in ['image/jpeg', 'image/png']:
-                continue
-            # Implement your actual image storage logic here
-            image_url = f"/static/uploads/{image.filename}"
-            db.add(Image(url=image_url, tour_id=new_tour.id))
+        if images:
+            upload_dir = "static/uploads"
+            os.makedirs(upload_dir, exist_ok=True)
+
+            for image in images:
+                if image.content_type not in ['image/jpeg', 'image/png']:
+                    continue
+
+                # Generate unique filename
+                file_ext = os.path.splitext(image.filename)[1]
+                unique_name = f"{uuid4().hex}{file_ext}"
+                file_path = os.path.join(upload_dir, unique_name)
+
+                # Save file
+                with open(file_path, "wb") as buffer:
+                    buffer.write(await image.read())
+
+                # Create image record
+                db.add(Image(
+                    url=f"/static/uploads/{unique_name}",
+                    tour_id=new_tour.id
+                ))
 
         db.commit()
+        logger.info(f"Tour '{name}' created successfully with ID {new_tour.id}")
         return RedirectResponse(url="/admin/tours", status_code=303)
 
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-
+        logger.error(f"Error creating tour: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not create tour. Please try again."
+        )
 
 
 @router.get("/{tour_id}/edit", response_class=HTMLResponse)
@@ -140,6 +164,7 @@ async def edit_tour(
     tour.max_tickets = max_tickets
     db.commit()
     return RedirectResponse(url="/admin", status_code=303)
+
 
 @router.post("/{tour_id}/delete")
 async def delete_tour(tour_id: int, db: Session = Depends(get_db), current_user: User = Depends(employee_required)):
