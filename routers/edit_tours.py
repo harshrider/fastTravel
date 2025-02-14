@@ -27,9 +27,9 @@ async def create_tour(
         max_tickets: int = Form(...),
         cancellation_policy: str = Form(...),
         refund_policy: str = Form(...),
-        rate_A: str = Form(...),
-        rate_B: str = Form(...),
-        rate_C: str = Form(...),
+        rate_a: str = Form(...),
+        rate_b: str = Form(...),
+        rate_c: str = Form(...),
         location_url: str = Form(None),
         transport_ids: List[int] = Form([]),
         tags: str = Form(''),
@@ -56,9 +56,9 @@ async def create_tour(
             max_tickets=max_tickets,
             cancellation_policy=cancellation_policy,
             refund_policy=refund_policy,
-            rate_A=rate_A,
-            rate_B=rate_B,
-            rate_C=rate_C,
+            rate_a=rate_a,
+            rate_b=rate_b,
+            rate_c=rate_c,
             location_url=location_url
         )
 
