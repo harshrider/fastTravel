@@ -98,14 +98,19 @@ class Tour(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(150), unique=True, index=True, nullable=False)
-    description = Column(String(1000), nullable=False)
-    price_A = Column(Float, nullable=False)
-    price_B = Column(Float, nullable=False)
+    description = Column(String(1000), nullable=True)
+    price_A = Column(Float, nullable=False, default=None)
+    price_B = Column(Float, nullable=False, default=None)
     price_C = Column(Float, nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
-    max_tickets = Column(Integer, nullable=False)
+    max_tickets = Column(Integer, nullable=False, default=1000)
     location_url = Column(String(255), nullable=True)
+    cancellation_policy = Column(String(1000), nullable=True, default="No cancellation policy specified.")
+    refund_policy = Column(String(1000), nullable=True, default="No refund policy specified.")
+    rate_A = Column(String(1000), nullable=True, default="Standard rate applies.")
+    rate_B = Column(String(1000), nullable=True, default="Standard rate applies.")
+    rate_C = Column(String(1000), nullable=True, default="Standard rate applies.")
 
     # Relationships
     tags = relationship("Tag", secondary=tour_tag_association, backref="tours")
@@ -116,6 +121,13 @@ class Tour(Base):
     bookings = relationship("Booking", back_populates="tour")
     transports = relationship("Transport", secondary=tour_transport_association, back_populates="tours")
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Set default values for price_A and price_B if they are None
+        if self.price_A is None:
+            self.price_A = self.price_B
+        if self.price_B is None:
+            self.price_B = self.price_C
 
 class Transport(Base):
     __tablename__ = "transports"
@@ -131,6 +143,7 @@ class Transport(Base):
     max_seats = Column(Integer, nullable=False)
     location_url = Column(String(255), nullable=True)
     is_transfer_service = Column(Boolean, default=False)  # Indicates if it's a transfer service
+
 
     # Pickup and Drop-off locations
     pickup_location = Column(String(255), nullable=True)

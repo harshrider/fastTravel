@@ -5,6 +5,9 @@
     <title>Manage Tours - Admin</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
+<!-- Add this at the top of the form -->
+<input type="hidden" name="start_date" value="{{ tour.availabilities[0].date if tour else '' }}">
+<input type="hidden" name="end_date" value="{{ tour.availabilities[-1].date if tour else '' }}">
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -120,6 +123,62 @@
             </div>
 
             <button type="submit" class="btn btn-primary">Create Tour</button>
+<div class="row">
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="cancellation_policy">Cancellation Policy</label>
+            <textarea class="form-control" name="cancellation_policy" rows="2" required>
+                {{ tour.cancellation_policy if tour else '24-hour free cancellation' }}
+            </textarea>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="refund_policy">Refund Policy</label>
+            <textarea class="form-control" name="refund_policy" rows="2" required>
+                {{ tour.refund_policy if tour else 'Full refund available up to 7 days before tour' }}
+            </textarea>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="rate_A">Rate A Description</label>
+            <input type="text" class="form-control" name="rate_A"
+                   value="{{ tour.rate_A if tour else 'Standard rate details' }}" required>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="rate_B">Rate B Description</label>
+            <input type="text" class="form-control" name="rate_B"
+                   value="{{ tour.rate_B if tour else 'Business rate details' }}" required>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="rate_C">Rate C Description</label>
+            <input type="text" class="form-control" name="rate_C"
+                   value="{{ tour.rate_C if tour else 'Customer rate details' }}" required>
+        </div>
+    </div>
+</div>
+
+<!-- Update transports section to handle many-to-many -->
+<div class="form-group">
+    <label>Select Transports</label>
+    {% for transport in all_transports %}
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="transport_ids"
+               value="{{ transport.id }}" {% if tour and transport in tour.transports %}checked{% endif %}>
+        <label class="form-check-label">
+            {{ transport.name }} ({{ transport.type }})
+        </label>
+    </div>
+    {% endfor %}
+</div>
         </form>
     </div>
 </div>
@@ -158,6 +217,7 @@
                     </tr>
                     {% endfor %}
                 </tbody>
+
             </table>
         </div>
     </div>
