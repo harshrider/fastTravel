@@ -38,7 +38,7 @@
                         <td>{{ user.email }}</td>
                         <td>{{ user.role.value }}</td>
                         <td>
-                            <form action="/admin/update_user_role" method="post" class="form-inline">
+                            <form action="/admin/update_user" method="post" class="form-inline">
                                 <input type="hidden" name="user_id" value="{{ user.id }}">
                                 <select name="new_role" class="form-control mr-2">
                                     {% for role in ['S', 'A', 'B', 'C', 'E', 'O'] %}

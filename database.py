@@ -6,18 +6,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = "postgresql://postgres:FIeQmkQFLeMMQiVXMbketFGPUZpGfUnA@postgres.railway.internal:5432/railway"
+# Determine environment
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local")  # local, production
+
+if ENVIRONMENT == "production":
+    # PythonAnywhere MySQL
+    DATABASE_URL = "mysql+pymysql://harshrider:yourpassword@harshrider.mysql.pythonanywhere-services.com/harshrider$yourdbname"
+else:
+    # Local SQLite for development
+    DATABASE_URL = "sqlite:///./travel_app.db"
 
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL not found in environment variables")
+    raise ValueError("DATABASE_URL not found")
 
-connect_args = {"sslmode": "require"} if "postgresql" in DATABASE_URL else {}
+# SQLite needs different settings
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL, echo=False)
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Add this to database.py
 def get_db():
     db = SessionLocal()
     try:
